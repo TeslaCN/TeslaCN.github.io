@@ -12,11 +12,11 @@
 <meta name="keywords" content="Golang,Docker,Alpine">
 <meta property="og:type" content="article">
 <meta property="og:title" content="基础镜像选择问题 | Alpine作为基础镜像的坑">
-<meta property="og:url" content="http://yoursite.com/2019/09/09/Docker-Alpine-作为-Golang-基础镜像的坑/index.html">
+<meta property="og:url" content="http://yoursite.com/2019/10/11/Docker-Alpine-作为-Golang-基础镜像的坑/index.html">
 <meta property="og:site_name" content="踩坑日志——吴伟杰">
 <meta property="og:description" content="基础镜像选择问题 | Alpine作为基础镜像的坑一、大致流程 alpine镜像体积只有5MB，作为Docker下最小的Linux镜像，很适合打造一些轻量级镜像。但alpine底层使用musl-libc，兼容性与glibc有一定差距。   用Golang编写了一个简单的hello, world程序，Dockerfile使用alpine作为基础镜像FROM alpine:latest能够正常运行；">
 <meta property="og:locale" content="cn">
-<meta property="og:updated_time" content="2019-10-11T13:20:23.236Z">
+<meta property="og:updated_time" content="2019-10-11T15:23:32.811Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="基础镜像选择问题 | Alpine作为基础镜像的坑">
 <meta name="twitter:description" content="基础镜像选择问题 | Alpine作为基础镜像的坑一、大致流程 alpine镜像体积只有5MB，作为Docker下最小的Linux镜像，很适合打造一些轻量级镜像。但alpine底层使用musl-libc，兼容性与glibc有一定差距。   用Golang编写了一个简单的hello, world程序，Dockerfile使用alpine作为基础镜像FROM alpine:latest能够正常运行；">
@@ -44,7 +44,7 @@
     <canvas id="anm-canvas" class="anm-canvas"></canvas>
     <div class="left-col" q-class="show:isShow">
       
-<div class="overlay" style="background: #4d4d4d"></div>
+<div class="overlay" style="background: #fff"></div>
 <div class="intrude-less">
 	<header id="header" class="inner">
 		<a href="/" class="profilepic">
@@ -62,7 +62,7 @@
 			
 				<li><a href="/">主页</a></li>
 	        
-				<li><a href="/tags/随笔/">随笔</a></li>
+				<li><a href="/tags/踩坑/">踩坑</a></li>
 	        
 			</ul>
 		</nav>
@@ -99,7 +99,7 @@
     <div class="mid-col" q-class="show:isShow,hide:isShow|isFalse">
       
 <nav id="mobile-nav">
-  	<div class="overlay js-overlay" style="background: #4d4d4d"></div>
+  	<div class="overlay js-overlay" style="background: #fff"></div>
 	<div class="btnctn js-mobile-btnctn">
   		<div class="slider-trigger list" q-on="click: openSlider(e)"><i class="icon icon-sort"></i></div>
 	</div>
@@ -140,7 +140,7 @@
 				
 					<li style="width: 50%"><a href="/">主页</a></li>
 		        
-					<li style="width: 50%"><a href="/tags/随笔/">随笔</a></li>
+					<li style="width: 50%"><a href="/tags/踩坑/">踩坑</a></li>
 		        
 				</ul>
 			</nav>
@@ -167,8 +167,8 @@
   
 
         
-        <a href="/2019/09/09/Docker-Alpine-作为-Golang-基础镜像的坑/" class="archive-article-date">
-  	<time datetime="2019-09-09T03:48:06.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-09</time>
+        <a href="/2019/10/11/Docker-Alpine-作为-Golang-基础镜像的坑/" class="archive-article-date">
+  	<time datetime="2019-10-11T14:48:06.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-10-11</time>
 </a>
         
       </header>
@@ -188,7 +188,7 @@
 <p>hello.go</p>
 <figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"os"</span></span><br><span class="line">	<span class="string">"flag"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> config = flag.String(<span class="string">"config"</span>, <span class="string">"go &amp; docker"</span>, <span class="string">"[-config value]"</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	flag.Parse()</span><br><span class="line">	fmt.Printf(<span class="string">"os.Args: %s\n"</span>, os.Args)</span><br><span class="line">	fmt.Printf(<span class="string">"hello, %s\n"</span>, *config)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> alpine:latest</span><br><span class="line"><span class="keyword">ENV</span> PARAMS=<span class="string">""</span></span><br><span class="line"><span class="keyword">WORKDIR</span> /</span><br><span class="line"><span class="keyword">ADD</span> hello /</span><br><span class="line"><span class="keyword">ENTRYPOINT</span> [ "sh", "-c", "./hello $PARAMS" ]</span><br></pre></td></tr></table></figure>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> alpine:latest</span><br><span class="line"><span class="keyword">ENV</span> PARAMS=<span class="string">""</span></span><br><span class="line"><span class="keyword">WORKDIR</span><span class="bash"> /</span></span><br><span class="line"><span class="keyword">ADD</span><span class="bash"> hello /</span></span><br><span class="line"><span class="keyword">ENTRYPOINT</span><span class="bash"> [ <span class="string">"sh"</span>, <span class="string">"-c"</span>, <span class="string">"./hello <span class="variable">$PARAMS</span>"</span> ]</span></span><br></pre></td></tr></table></figure>
 
 <ol start="2">
 <li>构建镜像</li>
@@ -207,7 +207,7 @@
 <h3 id="2-使用alpine作为基础镜像构建web应用，ENTRYPOINT使用sh运行程序"><a href="#2-使用alpine作为基础镜像构建web应用，ENTRYPOINT使用sh运行程序" class="headerlink" title="2.使用alpine作为基础镜像构建web应用，ENTRYPOINT使用sh运行程序"></a>2.使用<code>alpine</code>作为基础镜像构建web应用，<code>ENTRYPOINT</code>使用<code>sh</code>运行程序</h3><ol>
 <li>编写Dockerfile，基础镜像alpine</li>
 </ol>
-<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> alpine:latest</span><br><span class="line"><span class="keyword">WORKDIR</span> /</span><br><span class="line"><span class="keyword">ENV</span> PARAMS=<span class="string">""</span></span><br><span class="line"><span class="keyword">ADD</span> orderserver /</span><br><span class="line"><span class="keyword">ADD</span> configs /configs</span><br><span class="line"><span class="keyword">EXPOSE</span> <span class="number">60001</span></span><br><span class="line"><span class="keyword">ENTRYPOINT</span> ["sh", "-c", "/orderserver $PARAMS"]</span><br></pre></td></tr></table></figure>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> alpine:latest</span><br><span class="line"><span class="keyword">WORKDIR</span><span class="bash"> /</span></span><br><span class="line"><span class="keyword">ENV</span> PARAMS=<span class="string">""</span></span><br><span class="line"><span class="keyword">ADD</span><span class="bash"> orderserver /</span></span><br><span class="line"><span class="keyword">ADD</span><span class="bash"> configs /configs</span></span><br><span class="line"><span class="keyword">EXPOSE</span> <span class="number">60001</span></span><br><span class="line"><span class="keyword">ENTRYPOINT</span><span class="bash"> [<span class="string">"sh"</span>, <span class="string">"-c"</span>, <span class="string">"/orderserver <span class="variable">$PARAMS</span>"</span>]</span></span><br></pre></td></tr></table></figure>
 
 <ol start="2">
 <li>构建镜像</li>
@@ -224,7 +224,7 @@
 <h3 id="3-使用alpine作为基础镜像构建，ENTRYPOINT直接执行目标二进制文件，有更详细的报错信息，但仍然难以排查原因"><a href="#3-使用alpine作为基础镜像构建，ENTRYPOINT直接执行目标二进制文件，有更详细的报错信息，但仍然难以排查原因" class="headerlink" title="3.使用alpine作为基础镜像构建，ENTRYPOINT直接执行目标二进制文件，有更详细的报错信息，但仍然难以排查原因"></a>3.使用<code>alpine</code>作为基础镜像构建，<code>ENTRYPOINT</code>直接执行目标二进制文件，有更详细的报错信息，但仍然难以排查原因</h3><ol>
 <li>编写<code>Dockerfile</code>，<code>ENTRYPOINT</code>直接执行目标程序</li>
 </ol>
-<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> alpine:latest</span><br><span class="line"><span class="keyword">WORKDIR</span> /</span><br><span class="line"><span class="keyword">ENV</span> PARAMS=<span class="string">""</span></span><br><span class="line"><span class="keyword">ADD</span> orderserver /</span><br><span class="line"><span class="keyword">ADD</span> configs /configs</span><br><span class="line"><span class="keyword">EXPOSE</span> <span class="number">60001</span></span><br><span class="line"><span class="comment">#ENTRYPOINT ["sh", "-c", "/orderserver $PARAMS"]</span></span><br><span class="line"><span class="keyword">ENTRYPOINT</span> ["/orderserver"]</span><br></pre></td></tr></table></figure>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> alpine:latest</span><br><span class="line"><span class="keyword">WORKDIR</span><span class="bash"> /</span></span><br><span class="line"><span class="keyword">ENV</span> PARAMS=<span class="string">""</span></span><br><span class="line"><span class="keyword">ADD</span><span class="bash"> orderserver /</span></span><br><span class="line"><span class="keyword">ADD</span><span class="bash"> configs /configs</span></span><br><span class="line"><span class="keyword">EXPOSE</span> <span class="number">60001</span></span><br><span class="line"><span class="comment">#ENTRYPOINT ["sh", "-c", "/orderserver $PARAMS"]</span></span><br><span class="line"><span class="keyword">ENTRYPOINT</span><span class="bash"> [<span class="string">"/orderserver"</span>]</span></span><br></pre></td></tr></table></figure>
 
 <ol start="2">
 <li>build</li>
@@ -240,7 +240,7 @@
 <h3 id="4-使用frolvlad-alpine-glibc作为基础镜像构建并运行"><a href="#4-使用frolvlad-alpine-glibc作为基础镜像构建并运行" class="headerlink" title="4.使用frolvlad/alpine-glibc作为基础镜像构建并运行"></a>4.使用<code>frolvlad/alpine-glibc</code>作为基础镜像构建并运行</h3><ol>
 <li>编写<code>Dockerfile</code>，基础镜像<code>alpine-glibc</code></li>
 </ol>
-<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> frolvlad/alpine-glibc:latest</span><br><span class="line"><span class="keyword">WORKDIR</span> /</span><br><span class="line"><span class="keyword">ENV</span> PARAMS=<span class="string">""</span></span><br><span class="line"><span class="keyword">ADD</span> orderserver /</span><br><span class="line"><span class="keyword">ADD</span> configs /configs</span><br><span class="line"><span class="keyword">EXPOSE</span> <span class="number">60001</span></span><br><span class="line"><span class="keyword">ENTRYPOINT</span> ["sh", "-c", "/orderserver $PARAMS"]</span><br></pre></td></tr></table></figure>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> frolvlad/alpine-glibc:latest</span><br><span class="line"><span class="keyword">WORKDIR</span><span class="bash"> /</span></span><br><span class="line"><span class="keyword">ENV</span> PARAMS=<span class="string">""</span></span><br><span class="line"><span class="keyword">ADD</span><span class="bash"> orderserver /</span></span><br><span class="line"><span class="keyword">ADD</span><span class="bash"> configs /configs</span></span><br><span class="line"><span class="keyword">EXPOSE</span> <span class="number">60001</span></span><br><span class="line"><span class="keyword">ENTRYPOINT</span><span class="bash"> [<span class="string">"sh"</span>, <span class="string">"-c"</span>, <span class="string">"/orderserver <span class="variable">$PARAMS</span>"</span>]</span></span><br></pre></td></tr></table></figure>
 
 <ol start="2">
 <li>构建镜像</li>
@@ -371,7 +371,7 @@
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/09/09/Docker-Alpine-作为-Golang-基础镜像的坑/" alt="微信分享二维码">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/10/11/Docker-Alpine-作为-Golang-基础镜像的坑/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -406,6 +406,19 @@
             </div>
         </div>
         
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#基础镜像选择问题-Alpine作为基础镜像的坑"><span class="toc-number">1.</span> <span class="toc-text">基础镜像选择问题 | Alpine作为基础镜像的坑</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#一、大致流程"><span class="toc-number">1.1.</span> <span class="toc-text">一、大致流程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#二、问题复现"><span class="toc-number">1.2.</span> <span class="toc-text">二、问题复现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-使用alpine作为基础镜像构建Golang-hello-world应用，ENTRYPOINT使用sh运行程序"><span class="toc-number">1.2.1.</span> <span class="toc-text">1.使用alpine作为基础镜像构建Golang hello, world应用，ENTRYPOINT使用sh运行程序</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-使用alpine作为基础镜像构建web应用，ENTRYPOINT使用sh运行程序"><span class="toc-number">1.2.2.</span> <span class="toc-text">2.使用alpine作为基础镜像构建web应用，ENTRYPOINT使用sh运行程序</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-使用alpine作为基础镜像构建，ENTRYPOINT直接执行目标二进制文件，有更详细的报错信息，但仍然难以排查原因"><span class="toc-number">1.2.3.</span> <span class="toc-text">3.使用alpine作为基础镜像构建，ENTRYPOINT直接执行目标二进制文件，有更详细的报错信息，但仍然难以排查原因</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-使用frolvlad-alpine-glibc作为基础镜像构建并运行"><span class="toc-number">1.2.4.</span> <span class="toc-text">4.使用frolvlad/alpine-glibc作为基础镜像构建并运行</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#三、总结"><span class="toc-number">1.3.</span> <span class="toc-text">三、总结</span></a></li></ol></li></ol>
+                    </div>
+                </span>
+            </div>
+        </div>
         
     </div>
 </aside>
@@ -447,7 +460,7 @@
 		isArchive: false,
 		isTag: false,
 		isCategory: false,
-		open_in_new: false,
+		open_in_new: true,
 		toc_hide_index: true,
 		root: "/",
 		innerArchive: true,

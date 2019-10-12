@@ -374,6 +374,265 @@
 
 
   
+    <article id="post-分布式调度平台xxl-job个人改进思路" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/09/08/分布式调度平台xxl-job个人改进思路/">分布式调度平台xxl-job个人改进思路</a>
+    </h1>
+  
+
+        
+        <a href="/2019/09/08/分布式调度平台xxl-job个人改进思路/" class="archive-article-date">
+  	<time datetime="2019-09-08T15:02:42.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-09-08</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="分布式调度平台xxl-job个人改进思路"><a href="#分布式调度平台xxl-job个人改进思路" class="headerlink" title="分布式调度平台xxl-job个人改进思路"></a>分布式调度平台xxl-job个人改进思路</h1><blockquote>
+<p>本人<strong>刚入门</strong>后端开发，<strong>错误之处请批评指正</strong><br>被导师安排的🌚<br>本人于2019年9月6日与同事进行的分享  </p>
+</blockquote>
+<h2 id="1-xxl-job是什么"><a href="#1-xxl-job是什么" class="headerlink" title="1 xxl-job是什么"></a>1 xxl-job是什么</h2><h3 id="1-1-xxl-job是什么"><a href="#1-1-xxl-job是什么" class="headerlink" title="1.1 xxl-job是什么"></a>1.1 xxl-job是什么</h3><ul>
+<li>轻量级、易扩展的分布式任务调度框架</li>
+<li>通过Cron表达式配置计划任务<br>  <code>0 0/30 9-18 ? * MON-FRI</code> 朝九晚六每半个小时执行</li>
+<li>支持多语言（Java、Shell、Python、NodeJS、PHP、PowerShell等，需要执行器部署环境支持），任务逻辑可在Web界面编写代码，或在执行器编写代码</li>
+</ul>
+<h3 id="1-2-常见任务调度框架"><a href="#1-2-常见任务调度框架" class="headerlink" title="1.2 常见任务调度框架"></a>1.2 常见任务调度框架</h3><ul>
+<li>Quartz<br>  Java常用计划任务框架，虽然Quartz可以基于数据库实现作业的高可用，但分布式并行调度方面有所欠缺。</li>
+<li>elastic-job<br>  当当开发的弹性分布式任务调度系统，功能丰富强大，采用zookeeper实现分布式协调，实现任务高可用以及分片。</li>
+<li>xxl-job<br>  是大众点评员工徐雪里于2015年发布的分布式任务调度平台，是一个轻量级分布式任务调度框架，其核心设计目标是开发迅速、学习简单、轻量级、易扩展。</li>
+</ul>
+<h3 id="1-3-xxl-job-与-elastic-job-怎么选"><a href="#1-3-xxl-job-与-elastic-job-怎么选" class="headerlink" title="1.3 xxl-job 与 elastic-job 怎么选"></a>1.3 xxl-job 与 elastic-job 怎么选</h3><p>xxl-job</p>
+<ul>
+<li>核心设计目标是开发迅速、学习简单、轻量级、易扩展</li>
+<li>登记在用公司数&gt;228家</li>
+<li>开箱即用</li>
+<li>持续更新，社区活跃、文档齐全</li>
+</ul>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/%E5%88%86%E5%B8%83%E5%BC%8F%E8%B0%83%E5%BA%A6%E5%B9%B3%E5%8F%B0xxl-job%E4%B8%AA%E4%BA%BA%E6%94%B9%E8%BF%9B%E6%80%9D%E8%B7%AF/github-xxl-job.png" alt="xxl-job GitHub"></p>
+<p>elastic-job</p>
+<ul>
+<li>初衷面向高并发复杂业务</li>
+<li>部署、配置、使用相对复杂</li>
+<li>Last commit 一年半前</li>
+<li>Latest release 2017.07.10</li>
+</ul>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/%E5%88%86%E5%B8%83%E5%BC%8F%E8%B0%83%E5%BA%A6%E5%B9%B3%E5%8F%B0xxl-job%E4%B8%AA%E4%BA%BA%E6%94%B9%E8%BF%9B%E6%80%9D%E8%B7%AF/github-elastic-job.png" alt="elastic-job GitHub"></p>
+<h3 id="1-4-xxl-job-单节点基本架构"><a href="#1-4-xxl-job-单节点基本架构" class="headerlink" title="1.4 xxl-job 单节点基本架构"></a>1.4 xxl-job 单节点基本架构</h3><ul>
+<li>调度中心业务无关</li>
+<li>执行器业务相关，实现业务逻辑</li>
+<li>使用GLUE模式可以直接在监控界面上写业务代码<br><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/%E5%88%86%E5%B8%83%E5%BC%8F%E8%B0%83%E5%BA%A6%E5%B9%B3%E5%8F%B0xxl-job%E4%B8%AA%E4%BA%BA%E6%94%B9%E8%BF%9B%E6%80%9D%E8%B7%AF/xxl-job%E5%8D%95%E8%8A%82%E7%82%B9%E5%9F%BA%E6%9C%AC%E6%9E%B6%E6%9E%84.svg" alt="xxl-job单节点架构图"></li>
+</ul>
+<h2 id="2-xxl-job-HA"><a href="#2-xxl-job-HA" class="headerlink" title="2 xxl-job HA"></a>2 xxl-job HA</h2><h3 id="2-1-调度中心HA-amp-执行器HA"><a href="#2-1-调度中心HA-amp-执行器HA" class="headerlink" title="2.1 调度中心HA &amp; 执行器HA"></a>2.1 调度中心HA &amp; 执行器HA</h3><p>前提：</p>
+<ul>
+<li>每个执行器节点需要在配置中配置所有调度中心地址</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>调度中心地址写死，不便于节点数量调整</li>
+</ul>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/%E5%88%86%E5%B8%83%E5%BC%8F%E8%B0%83%E5%BA%A6%E5%B9%B3%E5%8F%B0xxl-job%E4%B8%AA%E4%BA%BA%E6%94%B9%E8%BF%9B%E6%80%9D%E8%B7%AF/xxl-job-without-nginx.svg" alt="HA without Nginx"></p>
+<h3 id="2-2-引入Nginx"><a href="#2-2-引入Nginx" class="headerlink" title="2.2 引入Nginx"></a>2.2 引入<code>Nginx</code></h3><p>已有条件：  </p>
+<ul>
+<li>调度中心通过数据库维护执行器信息，即执行器无须向所有调度中心注册，只须向其中一个节点注册  </li>
+</ul>
+<p>引入后：  </p>
+<ul>
+<li>实现负载均衡、故障迁移等  </li>
+<li>修改Nginx配置即可调整节点  </li>
+<li>执行器注册到调度中心走Nginx，调度中心调度任务仍然直接访问执行器  </li>
+</ul>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/%E5%88%86%E5%B8%83%E5%BC%8F%E8%B0%83%E5%BA%A6%E5%B9%B3%E5%8F%B0xxl-job%E4%B8%AA%E4%BA%BA%E6%94%B9%E8%BF%9B%E6%80%9D%E8%B7%AF/xxl-job-with-nginx.svg" alt="HA with Nginx"></p>
+<h3 id="2-3-执行器集群-amp-可用性"><a href="#2-3-执行器集群-amp-可用性" class="headerlink" title="2.3 执行器集群 &amp; 可用性"></a>2.3 执行器集群 &amp; 可用性</h3><ul>
+<li>执行器节点部署简单，不依赖数据库，只须确保可访问调度中心以及配置文件正确即可</li>
+<li>配置任务时，可以配置各种路由策略（包括：第一个、最后一个、轮询、随机、一致性HASH、最不经常使用、最近最久未使用、故障转移、忙碌转移等），调度时任务根据策略路由到对应执行器节点</li>
+<li>执行器高可用：直接水平扩展</li>
+</ul>
+<h3 id="2-4-调度中心集群-amp-可用性"><a href="#2-4-调度中心集群-amp-可用性" class="headerlink" title="2.4 调度中心集群 &amp; 可用性"></a>2.4 调度中心集群 &amp; 可用性</h3><ul>
+<li>调度中心集群的节点之间相对独立、透明，不会感知调度中心其他节点的存在，通过分布式锁进行同步</li>
+<li>调度中心各节点数据库等配置保持一致</li>
+<li>调度中心各节点所在主机的时钟必须同步（使用NTP）</li>
+<li>调度中心高可用涉及数据库、Nginx（可选）</li>
+</ul>
+<h2 id="3-原生实现特点与问题"><a href="#3-原生实现特点与问题" class="headerlink" title="3 原生实现特点与问题"></a>3 原生实现特点与问题</h2><h3 id="3-1-任务调度原生实现细节"><a href="#3-1-任务调度原生实现细节" class="headerlink" title="3.1 任务调度原生实现细节"></a>3.1 任务调度原生实现细节</h3><ul>
+<li>任务设置cron表达式并启动时，根据cron表达式计算任务下次调度时间戳（epoch milliseconds），并存到数据库中。</li>
+<li>调度中心每秒读取数据库中“下次调度时间”在未来5s之内的任务,筛选条件即<code>trigger_next_time &lt; System.currentTimeMillis() + 5000</code>，任务进入调度队列后，计算下次执行时间并更新数据。</li>
+<li>如果<code>下次调度时间</code>早于当前时间，即<code>过期任务</code>。若过期超过5s，从当前时间计算下次执行时间；若过期小于5s，立即调度一次并从当前时间计算下次执行时间。  </li>
+</ul>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/%E5%88%86%E5%B8%83%E5%BC%8F%E8%B0%83%E5%BA%A6%E5%B9%B3%E5%8F%B0xxl-job%E4%B8%AA%E4%BA%BA%E6%94%B9%E8%BF%9B%E6%80%9D%E8%B7%AF/mission-table.png" alt="mission-table"></p>
+<h3 id="3-2-原生实现如何保证多个调度中心节点不会重复调度任务"><a href="#3-2-原生实现如何保证多个调度中心节点不会重复调度任务" class="headerlink" title="3.2 原生实现如何保证多个调度中心节点不会重复调度任务"></a>3.2 原生实现如何保证多个调度中心节点不会重复调度任务</h3><ul>
+<li>通过分布式锁保证多个调度中心节点不会重复调度任务</li>
+<li>如果节点在执行临界区代码时宕机，数据库Connection断开，MySQL连接所对应的线程结束，与该线程相关的事务结束，即释放锁</li>
+<li>粗粒度锁，实现简单  </li>
+</ul>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/%E5%88%86%E5%B8%83%E5%BC%8F%E8%B0%83%E5%BA%A6%E5%B9%B3%E5%8F%B0xxl-job%E4%B8%AA%E4%BA%BA%E6%94%B9%E8%BF%9B%E6%80%9D%E8%B7%AF/xxl-job%E8%B0%83%E5%BA%A6%E9%80%BB%E8%BE%91.svg" alt="分布式锁流程图"></p>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/%E5%88%86%E5%B8%83%E5%BC%8F%E8%B0%83%E5%BA%A6%E5%B9%B3%E5%8F%B0xxl-job%E4%B8%AA%E4%BA%BA%E6%94%B9%E8%BF%9B%E6%80%9D%E8%B7%AF/transaction.png" alt="transaction"><br>上面为3个节点的调度中心集群，其中一个节点在临界区中执行任务调度逻辑，另外两个节点因事务阻塞而阻塞  </p>
+<h3 id="3-3-调度中心原生实现存在的问题"><a href="#3-3-调度中心原生实现存在的问题" class="headerlink" title="3.3 调度中心原生实现存在的问题"></a>3.3 调度中心原生实现存在的问题</h3><p>因为多种执行器路由策略（第一个、随机、轮询、哈希、LRU、分片等）的存在，执行器集群中各个节点可以得到充分利用  </p>
+<p>但调度中心目前的任务调度实现方式存在以下问题：  </p>
+<ul>
+<li><p>每次调度周期获取“计划执行时间”在未来5s内的任务，如果任务数量过多，节点可能无法在下一个调度周期前完成上一个周期的调度，即一个调度周期实际花费的时间超过5s，就有可能会产生过期任务。</p>
+<p>  <img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/%E5%88%86%E5%B8%83%E5%BC%8F%E8%B0%83%E5%BA%A6%E5%B9%B3%E5%8F%B0xxl-job%E4%B8%AA%E4%BA%BA%E6%94%B9%E8%BF%9B%E6%80%9D%E8%B7%AF/timeline.svg" alt="timeline"></p>
+</li>
+<li><p>如果任务数量过多且线程池的任务队列使用有界队列，很大概率会使线程池执行拒绝策略，抛出java.util.concurrent.RejectedExecutionException，导致任务调度失败。如果切换为无界队列，可能会导致任务积压，引发一系列问题。<br>  <img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/%E5%88%86%E5%B8%83%E5%BC%8F%E8%B0%83%E5%BA%A6%E5%B9%B3%E5%8F%B0xxl-job%E4%B8%AA%E4%BA%BA%E6%94%B9%E8%BF%9B%E6%80%9D%E8%B7%AF/java-thread-pool-executor.jpg" alt="java-thread-pool"><br>  <img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/%E5%88%86%E5%B8%83%E5%BC%8F%E8%B0%83%E5%BA%A6%E5%B9%B3%E5%8F%B0xxl-job%E4%B8%AA%E4%BA%BA%E6%94%B9%E8%BF%9B%E6%80%9D%E8%B7%AF/java-executor-service.png" alt="executor-service">同一时间任务过多时（任务执行时间过于集中），可能会导致线程池触发拒绝策略</p>
+</li>
+<li><p>由于分布式锁的存在任务调度多个节点串行化，不能充分利用调度中心集群中的其他节点资源。<br>  <img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/%E5%88%86%E5%B8%83%E5%BC%8F%E8%B0%83%E5%BA%A6%E5%B9%B3%E5%8F%B0xxl-job%E4%B8%AA%E4%BA%BA%E6%94%B9%E8%BF%9B%E6%80%9D%E8%B7%AF/xxl-job-scheduler.svg" alt="serialized"></p>
+</li>
+</ul>
+<h2 id="4-任务调度逻辑改进方案"><a href="#4-任务调度逻辑改进方案" class="headerlink" title="4 任务调度逻辑改进方案"></a>4 任务调度逻辑改进方案</h2><h3 id="4-1-任务调度逻辑修改方案"><a href="#4-1-任务调度逻辑修改方案" class="headerlink" title="4.1 任务调度逻辑修改方案"></a>4.1 任务调度逻辑修改方案</h3><ul>
+<li><strong>实现任务调度负载均衡</strong>。维护一个调度中心在线节点列表，从0开始按顺序给每个节点分配一个数值作为分片值。任务被调度时，根据id（或其他算法）路由到不同的调度中心</li>
+<li><strong>更细粒度的锁</strong>。调度任务时，通过CAS的方式更新任务“下次调度时间”，更新成功后再将任务推到调度队列；若CAS失败，则意味着任务可能已被其他节点调度（原因可能是调度中心在线节点数量新增或减少，任务路由也有所变动）</li>
+<li><strong>维护调度中心在线节点列表</strong>。在应用层或MySQL Event Scheduler删除过期节点（可能宕机或断网没有正常注销 ）  </li>
+</ul>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/%E5%88%86%E5%B8%83%E5%BC%8F%E8%B0%83%E5%BA%A6%E5%B9%B3%E5%8F%B0xxl-job%E4%B8%AA%E4%BA%BA%E6%94%B9%E8%BF%9B%E6%80%9D%E8%B7%AF/xxl-job-improved.svg" alt="xxl-job-improved"></p>
+<h2 id="5-高可用架构改进"><a href="#5-高可用架构改进" class="headerlink" title="5 高可用架构改进"></a>5 高可用架构改进</h2><h3 id="5-1-Nginx–调度中心集群唯一出口"><a href="#5-1-Nginx–调度中心集群唯一出口" class="headerlink" title="5.1 Nginx–调度中心集群唯一出口"></a>5.1 <code>Nginx</code>–调度中心集群唯一出口</h3><p>作为调度中心唯一出口，Nginx部署需要高可用方案</p>
+<p>Keepalived</p>
+<ul>
+<li>VRRP（虚拟路由冗余协议）</li>
+<li>管理LVS (Linux Virtual Server)</li>
+<li>心跳检测、故障切换</li>
+</ul>
+<p>Nginx + Keepalived 模式：</p>
+<ul>
+<li>主备模式</li>
+<li>互为主备</li>
+</ul>
+<h4 id="5-1-1-Nginx-Keepalived-主备模式"><a href="#5-1-1-Nginx-Keepalived-主备模式" class="headerlink" title="5.1.1 Nginx + Keepalived 主备模式"></a>5.1.1 Nginx + Keepalived 主备模式</h4><ul>
+<li>正常情况下，Master节点对外服务，Backup节点处于空闲状态  </li>
+<li>如果Backup收不到Master节点的心跳包，则认为Master节点出现故障，此时VIP(Virtual IP)切换到Backup节点对外提供服务</li>
+</ul>
+<p>缺点</p>
+<ul>
+<li>Master节点正常工作时，Backup节点处于空闲状态，资源利用率低</li>
+</ul>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/%E5%88%86%E5%B8%83%E5%BC%8F%E8%B0%83%E5%BA%A6%E5%B9%B3%E5%8F%B0xxl-job%E4%B8%AA%E4%BA%BA%E6%94%B9%E8%BF%9B%E6%80%9D%E8%B7%AF/nginx-master-backup.svg" alt="nginx-master-backup">主节点工作，备份节点空闲</p>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/%E5%88%86%E5%B8%83%E5%BC%8F%E8%B0%83%E5%BA%A6%E5%B9%B3%E5%8F%B0xxl-job%E4%B8%AA%E4%BA%BA%E6%94%B9%E8%BF%9B%E6%80%9D%E8%B7%AF/nginx-master-down.svg" alt="nginx-master-down">主节点宕机，备份节点工作</p>
+<h4 id="5-1-2-Nginx-Keepalived-互为备份"><a href="#5-1-2-Nginx-Keepalived-互为备份" class="headerlink" title="5.1.2 Nginx + Keepalived 互为备份"></a>5.1.2 Nginx + Keepalived 互为备份</h4><ul>
+<li>正常情况下，多个节点对应多个VIP(Virtual IP)对外提供服务</li>
+<li>DNS能够提供简单的负载均衡服务（例如轮询）</li>
+<li>如果某个VIP对应的节点出现故障，则将该VIP切换到其他正常工作的节点</li>
+</ul>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/%E5%88%86%E5%B8%83%E5%BC%8F%E8%B0%83%E5%BA%A6%E5%B9%B3%E5%8F%B0xxl-job%E4%B8%AA%E4%BA%BA%E6%94%B9%E8%BF%9B%E6%80%9D%E8%B7%AF/nginx-double-backup.svg" alt="nginx-double-backup">两个节点正常工作，负载均衡</p>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/%E5%88%86%E5%B8%83%E5%BC%8F%E8%B0%83%E5%BA%A6%E5%B9%B3%E5%8F%B0xxl-job%E4%B8%AA%E4%BA%BA%E6%94%B9%E8%BF%9B%E6%80%9D%E8%B7%AF/nginx-double-master-down.svg" alt="nginx-double-master-down">其中一个节点宕机，请求集中在另一个节点</p>
+<h3 id="5-2-MySQL高可用"><a href="#5-2-MySQL高可用" class="headerlink" title="5.2 MySQL高可用"></a>5.2 <code>MySQL</code>高可用</h3><blockquote>
+<p>本人对MySQL的多节点部署不熟悉，此处仅仅简单提一下</p>
+</blockquote>
+<ul>
+<li>MySQL目前有很多集群方案可选，适用于各种场景。由于xxl-job框架使用MySQL实现分布式锁，如果不修改调度中心任务调度的实现，除了考虑一致性、可用性的同时，还需要考虑集群方案须支持调度中心实现分布式锁的方式。</li>
+<li>个人理解，任务调度需要避免停机或遗漏，在CAP中满足P的情况下尽量提高A；xxl-job集群总体架构相对简明，选择MySQL集群方案时，在满足AP的情况下，优先考虑无侵入性、部署与维护相对简单的方案，避免调度系统技术复杂度过高  </li>
+</ul>
+<p>常见MySQL集群方案  </p>
+<ol>
+<li>MySQL (内建复制功能) + Keepalived</li>
+<li>MHA (MySQL-Master-HA)</li>
+<li>PXC (Percona XtraDB Cluster)</li>
+<li>MyCat / Cobar 数据库中间件</li>
+<li>MGR (MySQL Group Replication)</li>
+</ol>
+<p>本人理解，方案1比较适合目前的场景。</p>
+<ol>
+<li>由于xxl依赖MySQL实现分布式锁，数据写入必须只在同一个数据库节点进行；</li>
+<li>调度中心每秒都会读取数据库，如果不能保证强一致性，可能会发生任务重复调用，在实际情况中，强一致性难以保证；  </li>
+</ol>
+<p>综上2点，不做读写分离；  </p>
+<ol>
+<li>在保证P的情况下尽量提高A</li>
+<li>技术复杂度相对较低</li>
+</ol>
+<p>MySQL + Keepalived</p>
+<ul>
+<li>Master节点正常工作时，持续发送心跳包到Backup节点</li>
+<li>Slave节点通过MySQL内建复制功能同步Master节点的数据，Master宕机时有可能</li>
+<li>读写不分离，均落在单一节点</li>
+<li>Master节点宕机时，VIP将切换到Slave节点，Slave节点成为新的Master节点</li>
+</ul>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/%E5%88%86%E5%B8%83%E5%BC%8F%E8%B0%83%E5%BA%A6%E5%B9%B3%E5%8F%B0xxl-job%E4%B8%AA%E4%BA%BA%E6%94%B9%E8%BF%9B%E6%80%9D%E8%B7%AF/mysql-keepalive.svg" alt="mysql-master-backup">主从同步，Binlog之类的方式</p>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/%E5%88%86%E5%B8%83%E5%BC%8F%E8%B0%83%E5%BA%A6%E5%B9%B3%E5%8F%B0xxl-job%E4%B8%AA%E4%BA%BA%E6%94%B9%E8%BF%9B%E6%80%9D%E8%B7%AF/mysql-master-down.svg" alt="mysql-master-down">主节点宕机，备份节点工作。后续主节点恢复工作可能需要手动进行。</p>
+<h3 id="5-3-方案最终架构"><a href="#5-3-方案最终架构" class="headerlink" title="5.3 方案最终架构"></a>5.3 方案最终架构</h3><p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/%E5%88%86%E5%B8%83%E5%BC%8F%E8%B0%83%E5%BA%A6%E5%B9%B3%E5%8F%B0xxl-job%E4%B8%AA%E4%BA%BA%E6%94%B9%E8%BF%9B%E6%80%9D%E8%B7%AF/%E6%9C%80%E7%BB%88%E9%9B%86%E7%BE%A4%E6%96%B9%E6%A1%88.svg" alt="最终集群方案"></p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Java</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">xxl-job</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">任务调度</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">分布式</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">高可用</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+	<div class="article-category tagcloud">
+		<i class="icon-book icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="/categories/Java//" class="article-tag-list-link color5">Java</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/09/08/分布式调度平台xxl-job个人改进思路/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
   
 
 
@@ -476,6 +735,26 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">Alpine</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">Java</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">xxl-job</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">任务调度</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">分布式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">高可用</a>
               </li>
             
             <div class="clearfix"></div>

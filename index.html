@@ -156,6 +156,407 @@
           <div id="js-content" class="content-ll">
             
   
+    <article id="post-Spring-Cloud-Gateway路由与Controller的优先级" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/11/15/Spring-Cloud-Gateway路由与Controller的优先级/">Spring-Cloud-Gateway | 直接请求 @RequesetMapping 的 Controller 时  GlobalFilter 不生效</a>
+    </h1>
+  
+
+        
+        <a href="/2019/11/15/Spring-Cloud-Gateway路由与Controller的优先级/" class="archive-article-date">
+  	<time datetime="2019-11-15T15:43:31.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-11-15</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="请求网关层项目中的-Controller-且-”请求路径“-与-RequestMapping-一致时，GlobalFilter-不生效"><a href="#请求网关层项目中的-Controller-且-”请求路径“-与-RequestMapping-一致时，GlobalFilter-不生效" class="headerlink" title="请求网关层项目中的 Controller 且 ”请求路径“ 与 @RequestMapping 一致时，GlobalFilter 不生效"></a>请求网关层项目中的 Controller 且 ”请求路径“ 与 @RequestMapping 一致时，GlobalFilter 不生效</h1><h2 id="1-前言"><a href="#1-前言" class="headerlink" title="1 前言"></a>1 前言</h2><p>之前的项目网关层都是使用Feign并复制上游的接口定义粘贴到网关层项目中，<br>然后编写Controller调用下游。即大部分接口都要在网关层复制一份，部分接口在网关做一些简单的逻辑。<br>这种方式非常繁琐，一旦上游修改接口或者DTO，网关层都要同步修改。当一份接口复制到多个网关层，修改起来存在一定工作量，且容易出错。也不知道是谁想出来这么做的🌚🌚</p>
+<p>最近使用Spring Cloud Gateway作为应用网关。在网关层，只需进行一定配置，发送到网关的请求会根据一定的规则路由到对应的服务，省去了以前复制接口的工作，减少了网关层的工作量。</p>
+<p>虽然大部分接口都是可以直接转发到对应服务，还有少部分接口需要在网关层做一些逻辑，例如生成打印图片返回给App端。<br>这部分逻辑不适合直接做在后端服务中，前端做起来也有难度，因此，这部分逻辑可以放到网关层实现。</p>
+<p><strong>目前遇到一个问题，即本文探讨的问题：</strong> 网关层的操作需要鉴权，因此存在一个用于鉴权的GlobalFilter，<br>前端的请求只有带有有效的登录信息才会被转发到后端对应的服务。<br>现在在网关层中编写了一个逻辑简单但必要的Controller，这个Controller中的接口同样需要鉴权。<br>但经过测试，对应Controller的RequestMapping的请求不会经过GlobalFilter，直接发到了Controller中，即未被鉴权。</p>
+<h2 id="2-实践"><a href="#2-实践" class="headerlink" title="2 实践"></a>2 实践</h2><blockquote>
+<p>此处直接在开源版本的<a href="https://github.com/teslacn/xxl-sso" target="_blank" rel="noopener">xxl-sso</a>上创建一个基于Spring-Cloud-Gateway的Client<br>并通过GlobalFilter实现鉴权过滤器</p>
+</blockquote>
+<h3 id="2-1-编写Controller"><a href="#2-1-编写Controller" class="headerlink" title="2.1 编写Controller"></a>2.1 编写Controller</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> com.xxl.sso.core.conf.Conf;</span><br><span class="line"><span class="keyword">import</span> com.xxl.sso.core.entity.ReturnT;</span><br><span class="line"><span class="keyword">import</span> com.xxl.sso.core.user.XxlSsoUser;</span><br><span class="line"><span class="keyword">import</span> org.springframework.web.bind.annotation.GetMapping;</span><br><span class="line"><span class="keyword">import</span> org.springframework.web.bind.annotation.RequestMapping;</span><br><span class="line"><span class="keyword">import</span> org.springframework.web.bind.annotation.RestController;</span><br><span class="line"><span class="keyword">import</span> org.springframework.web.server.ServerWebExchange;</span><br><span class="line"><span class="keyword">import</span> reactor.core.publisher.Mono;</span><br><span class="line"></span><br><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="meta">@RequestMapping</span>(<span class="string">"/demo"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">IndexController</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@GetMapping</span>(<span class="string">"/user"</span>)</span><br><span class="line">    <span class="keyword">public</span> Mono&lt;ReturnT&lt;XxlSsoUser&gt;&gt; index(ServerWebExchange exchange) &#123;</span><br><span class="line">        XxlSsoUser xxlUser = exchange.getAttribute(Conf.SSO_USER);</span><br><span class="line">        <span class="keyword">return</span> Mono.just(<span class="keyword">new</span> ReturnT&lt;&gt;(xxlUser));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-2-编写GlobalFilter"><a href="#2-2-编写GlobalFilter" class="headerlink" title="2.2 编写GlobalFilter"></a>2.2 编写GlobalFilter</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> org.springframework.cloud.gateway.filter.GatewayFilterChain;</span><br><span class="line"><span class="keyword">import</span> org.springframework.cloud.gateway.filter.GlobalFilter;</span><br><span class="line"><span class="keyword">import</span> org.springframework.core.Ordered;</span><br><span class="line"><span class="keyword">import</span> org.springframework.http.server.reactive.ServerHttpRequest;</span><br><span class="line"><span class="keyword">import</span> org.springframework.http.server.reactive.ServerHttpResponse;</span><br><span class="line"><span class="keyword">import</span> org.springframework.stereotype.Component;</span><br><span class="line"><span class="keyword">import</span> org.springframework.web.server.ServerWebExchange;</span><br><span class="line"><span class="keyword">import</span> reactor.core.publisher.Flux;</span><br><span class="line"><span class="keyword">import</span> reactor.core.publisher.Mono;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">XxlSsoTokenGatewayFilter</span> <span class="keyword">implements</span> <span class="title">GlobalFilter</span>, <span class="title">Ordered</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Mono&lt;Void&gt; <span class="title">filter</span><span class="params">(ServerWebExchange exchange, GatewayFilterChain chain)</span> </span>&#123;</span><br><span class="line">        ServerHttpRequest request = exchange.getRequest();</span><br><span class="line">        ServerHttpResponse response = exchange.getResponse();</span><br><span class="line">        <span class="comment">// 省略过滤逻辑</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getOrder</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> HIGHEST_PRECEDENCE;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-3-路由配置"><a href="#2-3-路由配置" class="headerlink" title="2.3 路由配置"></a>2.3 路由配置</h3><figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">spring.cloud.gateway.routes[0].id</span>=<span class="string">default</span></span><br><span class="line"><span class="meta">spring.cloud.gateway.routes[0].uri</span>=<span class="string">forward:/</span></span><br><span class="line"><span class="meta">spring.cloud.gateway.routes[0].predicates[0]</span>=<span class="string">Path=/demo/user</span></span><br><span class="line"><span class="meta">spring.cloud.gateway.routes[0].filters[0]</span>=<span class="string">SetPath=/demo/user</span></span><br><span class="line"><span class="meta">spring.cloud.gateway.routes[1].id</span>=<span class="string">internal</span></span><br><span class="line"><span class="meta">spring.cloud.gateway.routes[1].uri</span>=<span class="string">forward:/</span></span><br><span class="line"><span class="meta">spring.cloud.gateway.routes[1].predicates[0]</span>=<span class="string">Path=/internal/user</span></span><br><span class="line"><span class="meta">spring.cloud.gateway.routes[1].filters[0]</span>=<span class="string">SetPath=/demo/user</span></span><br><span class="line"><span class="meta">spring.cloud.gateway.routes[2].id</span>=<span class="string">github</span></span><br><span class="line"><span class="meta">spring.cloud.gateway.routes[2].uri</span>=<span class="string">https://github.com</span></span><br><span class="line"><span class="meta">spring.cloud.gateway.routes[2].predicates[0]</span>=<span class="string">Path=/TeslaCN/**</span></span><br></pre></td></tr></table></figure>
+
+<p>配置了3条路由：</p>
+<ol>
+<li>内部转发 <code>/demo/user</code> 到 <code>/demo/user</code></li>
+<li>内部转发 <code>/internal/user</code> 到 <code>/demo/user</code></li>
+<li>转发 <code>/TeslaCN/**</code> 到 <a href="https://github.com" target="_blank" rel="noopener">GitHub</a></li>
+</ol>
+<h3 id="2-4-启动-DEBUG-打断点，发送请求"><a href="#2-4-启动-DEBUG-打断点，发送请求" class="headerlink" title="2.4 启动 DEBUG 打断点，发送请求"></a>2.4 启动 DEBUG 打断点，发送请求</h3><p>将断点打在了filter逻辑的第一行</p>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/Spring-Cloud-Gateway_GlobalFilter_doesnt_work/breakpoint.png" alt="breakpoint"></p>
+<h4 id="2-4-1-直接请求-TeslaCN-xxl-sso"><a href="#2-4-1-直接请求-TeslaCN-xxl-sso" class="headerlink" title="2.4.1 直接请求 /TeslaCN/xxl-sso"></a>2.4.1 直接请求 <code>/TeslaCN/xxl-sso</code></h4><p>不经过登录，直接请求</p>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/Spring-Cloud-Gateway_GlobalFilter_doesnt_work/request_github_not_login.png" alt="request_github_not_login"></p>
+<p>返回结果：未登录</p>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/Spring-Cloud-Gateway_GlobalFilter_doesnt_work/request_github_not_login_result.png" alt="request_github_not_login_result"></p>
+<h4 id="2-4-2-请求SSO服务器登录后-再请求-TeslaCN-xxl-sso"><a href="#2-4-2-请求SSO服务器登录后-再请求-TeslaCN-xxl-sso" class="headerlink" title="2.4.2 请求SSO服务器登录后 再请求 /TeslaCN/xxl-sso"></a>2.4.2 请求SSO服务器登录后 再请求 <code>/TeslaCN/xxl-sso</code></h4><p>请求 SSO 登录接口  </p>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/Spring-Cloud-Gateway_GlobalFilter_doesnt_work/request_xxl_sso.png" alt="request_xxl_sso"></p>
+<p>返回结果：登录成功，data 即 Token</p>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/Spring-Cloud-Gateway_GlobalFilter_doesnt_work/request_xxl_sso_result.png" alt="request_xxl_sso_result"></p>
+<p>将 Token 放入 Headers 中，发送请求到网关</p>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/Spring-Cloud-Gateway_GlobalFilter_doesnt_work/request_github_logined.png" alt="request_github_logined"></p>
+<p>此时断点生效</p>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/Spring-Cloud-Gateway_GlobalFilter_doesnt_work/request_github_logined_breakpoint.png" alt="request_github_logined_breakpoint"></p>
+<p>继续运行，查看响应结果，可以看到转发到GitHub的请求成功了</p>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/Spring-Cloud-Gateway_GlobalFilter_doesnt_work/request_github_logined_result.png" alt="request_github_logined_result"></p>
+<h4 id="2-4-3-请求-Gateway-中的-Controller"><a href="#2-4-3-请求-Gateway-中的-Controller" class="headerlink" title="2.4.3 请求 Gateway 中的 Controller"></a>2.4.3 请求 Gateway 中的 Controller</h4><h5 id="预期结果"><a href="#预期结果" class="headerlink" title="预期结果"></a>预期结果</h5><p>未登录时，拦截请求并返回如<a href="#241-%e7%9b%b4%e6%8e%a5%e8%af%b7%e6%b1%82-teslacnxxl-sso">2.4.1</a>中的结果；<br>附带有效的xxl_sso_sessionid发送请求时，接口按照逻辑返回当前登录的用户信息</p>
+<h5 id="实际结果"><a href="#实际结果" class="headerlink" title="实际结果"></a>实际结果</h5><p>准备请求</p>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/Spring-Cloud-Gateway_GlobalFilter_doesnt_work/request_demo_not_login.png" alt="request_demo_not_login"></p>
+<p>返回结果：并没有返回 “sso not login” 的结果，而是成功请求了接口，与预期结果不一致。</p>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/Spring-Cloud-Gateway_GlobalFilter_doesnt_work/request_demo_not_login-result.png" alt="request_demo_not_login-result"></p>
+<p>即GlobalFilter并没有Global🌚</p>
+<h5 id="猜想"><a href="#猜想" class="headerlink" title="猜想"></a>猜想</h5><p>也许是因为网关路由的优先级低于RequestMapping，所以“请求路径”和<code>@RequestMapping</code>一致时优先匹配RequestMapping？</p>
+<h2 id="3-分析与验证"><a href="#3-分析与验证" class="headerlink" title="3 分析与验证"></a>3 分析与验证</h2><p>Spring Web MVC 有 <code>DispatcherServlet</code>，Spring Cloud Gateway (WebFlux) 同样也有 <code>DispatcherHandler</code></p>
+<p>先从 <code>DispatcherHandler</code> 的源码下手</p>
+<h3 id="DispatcherHandler-源码节选"><a href="#DispatcherHandler-源码节选" class="headerlink" title="DispatcherHandler 源码节选"></a><code>DispatcherHandler</code> 源码节选</h3><p>Version: org.springframework:spring-webflux:5.0.4.RELEASE</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Central dispatcher for HTTP request handlers/controllers. Dispatches to</span></span><br><span class="line"><span class="comment"> * registered handlers for processing a request, providing convenient mapping</span></span><br><span class="line"><span class="comment"> * facilities.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * &lt;p&gt;&#123;<span class="doctag">@code</span> DispatcherHandler&#125; discovers the delegate components it needs from</span></span><br><span class="line"><span class="comment"> * Spring configuration. It detects the following in the application context:</span></span><br><span class="line"><span class="comment"> * &lt;ul&gt;</span></span><br><span class="line"><span class="comment"> * &lt;li&gt;&#123;<span class="doctag">@link</span> HandlerMapping&#125; -- map requests to handler objects</span></span><br><span class="line"><span class="comment"> * &lt;li&gt;&#123;<span class="doctag">@link</span> HandlerAdapter&#125; -- for using any handler interface</span></span><br><span class="line"><span class="comment"> * &lt;li&gt;&#123;<span class="doctag">@link</span> HandlerResultHandler&#125; -- process handler return values</span></span><br><span class="line"><span class="comment"> * &lt;/ul&gt;</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * &lt;p&gt;&#123;<span class="doctag">@code</span> DispatcherHandler&#125; s also designed to be a Spring bean itself and</span></span><br><span class="line"><span class="comment"> * implements &#123;<span class="doctag">@link</span> ApplicationContextAware&#125; for access to the context it runs</span></span><br><span class="line"><span class="comment"> * in. If &#123;<span class="doctag">@code</span> DispatcherHandler&#125; is declared with the bean name "webHandler"</span></span><br><span class="line"><span class="comment"> * it is discovered by &#123;<span class="doctag">@link</span> WebHttpHandlerBuilder#applicationContext&#125; which</span></span><br><span class="line"><span class="comment"> * creates a processing chain together with &#123;<span class="doctag">@code</span> WebFilter&#125;,</span></span><br><span class="line"><span class="comment"> * &#123;<span class="doctag">@code</span> WebExceptionHandler&#125; and others.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * &lt;p&gt;A &#123;<span class="doctag">@code</span> DispatcherHandler&#125; bean declaration is included in</span></span><br><span class="line"><span class="comment"> * &#123;<span class="doctag">@link</span> org.springframework.web.reactive.config.EnableWebFlux <span class="doctag">@EnableWebFlux</span>&#125;</span></span><br><span class="line"><span class="comment"> * configuration.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> Rossen Stoyanchev</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> Sebastien Deleuze</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span> Juergen Hoeller</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@since</span> 5.0</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@see</span> WebHttpHandlerBuilder#applicationContext(ApplicationContext)</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DispatcherHandler</span> <span class="keyword">implements</span> <span class="title">WebHandler</span>, <span class="title">ApplicationContextAware</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Log logger = LogFactory.getLog(DispatcherHandler.class);</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">	<span class="keyword">private</span> List&lt;HandlerMapping&gt; handlerMappings;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">	<span class="keyword">private</span> List&lt;HandlerAdapter&gt; handlerAdapters;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">	<span class="keyword">private</span> List&lt;HandlerResultHandler&gt; resultHandlers;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Create a new &#123;<span class="doctag">@code</span> DispatcherHandler&#125; for the given &#123;<span class="doctag">@link</span> ApplicationContext&#125;.</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@param</span> applicationContext the application context to find the handler beans in</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">DispatcherHandler</span><span class="params">(ApplicationContext applicationContext)</span> </span>&#123;</span><br><span class="line">		initStrategies(applicationContext);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setApplicationContext</span><span class="params">(ApplicationContext applicationContext)</span> </span>&#123;</span><br><span class="line">		initStrategies(applicationContext);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">initStrategies</span><span class="params">(ApplicationContext context)</span> </span>&#123;</span><br><span class="line">		Map&lt;String, HandlerMapping&gt; mappingBeans = BeanFactoryUtils.beansOfTypeIncludingAncestors(</span><br><span class="line">				context, HandlerMapping.class, <span class="keyword">true</span>, <span class="keyword">false</span>);</span><br><span class="line"></span><br><span class="line">		ArrayList&lt;HandlerMapping&gt; mappings = <span class="keyword">new</span> ArrayList&lt;&gt;(mappingBeans.values());</span><br><span class="line">		AnnotationAwareOrderComparator.sort(mappings);</span><br><span class="line">		<span class="keyword">this</span>.handlerMappings = Collections.unmodifiableList(mappings);</span><br><span class="line"></span><br><span class="line">		Map&lt;String, HandlerAdapter&gt; adapterBeans = BeanFactoryUtils.beansOfTypeIncludingAncestors(</span><br><span class="line">				context, HandlerAdapter.class, <span class="keyword">true</span>, <span class="keyword">false</span>);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">this</span>.handlerAdapters = <span class="keyword">new</span> ArrayList&lt;&gt;(adapterBeans.values());</span><br><span class="line">		AnnotationAwareOrderComparator.sort(<span class="keyword">this</span>.handlerAdapters);</span><br><span class="line"></span><br><span class="line">		Map&lt;String, HandlerResultHandler&gt; beans = BeanFactoryUtils.beansOfTypeIncludingAncestors(</span><br><span class="line">				context, HandlerResultHandler.class, <span class="keyword">true</span>, <span class="keyword">false</span>);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">this</span>.resultHandlers = <span class="keyword">new</span> ArrayList&lt;&gt;(beans.values());</span><br><span class="line">		AnnotationAwareOrderComparator.sort(<span class="keyword">this</span>.resultHandlers);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="DispatcherHandler-初始化"><a href="#DispatcherHandler-初始化" class="headerlink" title="DispatcherHandler 初始化"></a><code>DispatcherHandler</code> 初始化</h4><p>关注 Field 和初始化方法，在 <code>initStrategies</code> 方法打了个断点。</p>
+<p>可以看到，此时3个 Field 都是 null</p>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/Spring-Cloud-Gateway_GlobalFilter_doesnt_work/dispatcherhandler-init-1.png" alt="dispatcherhandler-init-1"></p>
+<p>执行了第1行代码后，handlerMappings 的 Bean实例 都拿到了。<br>可以看到，数组中有 4个Mapping，其中包括了：</p>
+<ul>
+<li><code>RequestMappingHandlerMapping</code></li>
+<li><code>RoutePredicateHandlerMapping</code></li>
+</ul>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/Spring-Cloud-Gateway_GlobalFilter_doesnt_work/dispatcherhandler-init-2.png" alt="dispatcherhandler-init-2"></p>
+<p>进行排序操作后，它们的顺序如图</p>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/Spring-Cloud-Gateway_GlobalFilter_doesnt_work/ordered-handler-mappings.png" alt="ordered-handler-mappings"></p>
+<p>点开 <code>handlerMappings</code> 的属性</p>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/Spring-Cloud-Gateway_GlobalFilter_doesnt_work/handler-mappings-fields.png" alt="handler-mappings-fields"></p>
+<p>其实看到这里，答案也有了。</p>
+<p><strong><code>RequestMappingHandlerMapping</code> order &lt; <code>RoutePredicateHandlerMapping</code> order</strong></p>
+<p>HandlerMapping的顺序问题，我浏览了<br><a href="https://cloud.spring.io/spring-cloud-static/spring-cloud-gateway/2.2.0.RC2/reference/html/" target="_blank" rel="noopener">Reference Doc. 2.2.0 RC2</a><br>貌似没有找到相关顺序的配置项</p>
+<h2 id="4-思考"><a href="#4-思考" class="headerlink" title="4 思考"></a>4 思考</h2><p>官方文档没有提到 <code>HandlerMapping</code> 的顺序的配置项，是因为”遗漏了“还是”设计本如此“？</p>
+<p><code>RoutePredicateHandlerMapping</code> 源码节选</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RoutePredicateHandlerMapping</span> <span class="keyword">extends</span> <span class="title">AbstractHandlerMapping</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> FilteringWebHandler webHandler;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> RouteLocator routeLocator;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">RoutePredicateHandlerMapping</span><span class="params">(FilteringWebHandler webHandler, RouteLocator routeLocator)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.webHandler = webHandler;</span><br><span class="line">		<span class="keyword">this</span>.routeLocator = routeLocator;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 构造方法直接将 order 写死为 1</span></span><br><span class="line">		setOrder(<span class="number">1</span>);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>WebFluxConfigurationSupport</code> 源码节选</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> RequestMappingHandlerMapping <span class="title">requestMappingHandlerMapping</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    RequestMappingHandlerMapping mapping = createRequestMappingHandlerMapping();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// order 写死为 0</span></span><br><span class="line">    mapping.setOrder(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    mapping.setContentTypeResolver(webFluxContentTypeResolver());</span><br><span class="line">    mapping.setCorsConfigurations(getCorsConfigurations());</span><br><span class="line"></span><br><span class="line">    PathMatchConfigurer configurer = getPathMatchConfigurer();</span><br><span class="line">    Boolean useTrailingSlashMatch = configurer.isUseTrailingSlashMatch();</span><br><span class="line">    Boolean useCaseSensitiveMatch = configurer.isUseCaseSensitiveMatch();</span><br><span class="line">    <span class="keyword">if</span> (useTrailingSlashMatch != <span class="keyword">null</span>) &#123;</span><br><span class="line">        mapping.setUseTrailingSlashMatch(useTrailingSlashMatch);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (useCaseSensitiveMatch != <span class="keyword">null</span>) &#123;</span><br><span class="line">        mapping.setUseCaseSensitiveMatch(useCaseSensitiveMatch);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> mapping;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在文档第15节<br><a href="https://cloud.spring.io/spring-cloud-static/spring-cloud-gateway/2.2.0.RC2/reference/html/#building-a-simple-gateway-using-spring-mvc-or-webflux" target="_blank" rel="noopener">15. Building a Simple Gateway Using Spring MVC or Webflux</a><br>提到通过 <code>WebFlux</code> 构建简单的网关</p>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2019/09/Spring-Cloud-Gateway_GlobalFilter_doesnt_work/doc-15.png" alt="doc-15"></p>
+<p>假设我调整了 <code>RequestMappingHandlerMapping</code> 和 <code>RoutePredicateHandlerMapping</code><br>的顺序，使后者顺序更前，我在本项目所写的 GlobalFilter 就能够直接作用在 Controller 上，<br>实际结果可能就和<br><a href="#243-%e8%af%b7%e6%b1%82-gateway-%e4%b8%ad%e7%9a%84-controller">2.4.3</a><br>所提到的预期结果一致了</p>
+<p>但同时，上述文档提到的通过 <code>WebFlux</code> / <code>MVC</code> 构建网关的方式，所有请求都会经过Filter，<br><del>此时会出现问题</del><br>貌似也不会有问题，让所有请求都经过了Filter。</p>
+<p><strong>应该结合具体场景考虑</strong></p>
+<h2 id="5-当前问题解决方案"><a href="#5-当前问题解决方案" class="headerlink" title="5 当前问题解决方案"></a>5 当前问题解决方案</h2><p>方案：</p>
+<ol>
+<li>抽象，将鉴权逻辑与 MVC / WebFlux / Gateway 代码解耦</li>
+<li>使用 webFlux Filter 再实现一遍鉴权逻辑</li>
+<li>……</li>
+</ol>
+<p>目前本人倾向于 第2种 解决方案。</p>
+<p>xxl-sso 项目本身提供了基于 Servlet 的 Filter，<br>本人自己实现了基于 Spring-Cloud-Gateway 的过滤逻辑，<br>过滤逻辑 <strong>比较简单</strong> 且 <strong>不会频繁修改</strong> ，用 WebFlux 再实现一遍可能问题不大🌚</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Spring Cloud</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">Spring Cloud Gateway</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Reactor</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">WebFlux</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+	<div class="article-category tagcloud">
+		<i class="icon-book icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="/categories/Spring-Cloud//" class="article-tag-list-link color3">Spring Cloud</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="/categories/Spring-Cloud/Spring-Cloud-Gateway//" class="article-tag-list-link color1">Spring Cloud Gateway</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/11/15/Spring-Cloud-Gateway路由与Controller的优先级/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-Jenkins初探" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/10/30/Jenkins初探/">Jenkins 初探</a>
+    </h1>
+  
+
+        
+        <a href="/2019/10/30/Jenkins初探/" class="archive-article-date">
+  	<time datetime="2019-10-30T00:56:31.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-10-30</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="Jenkins-初探"><a href="#Jenkins-初探" class="headerlink" title="Jenkins 初探"></a>Jenkins 初探</h1><blockquote>
+<p><a href="https://jenkins.io" target="_blank" rel="noopener">Jenkins</a><br>是开源CI&amp;CD软件领导者， 提供超过1000个插件来支持构建、部署、自动化， 满足任何项目的需要。</p>
+</blockquote>
+<h2 id="1-为什么选Jenkins"><a href="#1-为什么选Jenkins" class="headerlink" title="1 为什么选Jenkins"></a>1 为什么选Jenkins</h2><p>之前尝试过</p>
+<ul>
+<li>Git/GitHub Hook</li>
+<li>GitLab CI/CD</li>
+</ul>
+<h2 id="2-实践步骤"><a href="#2-实践步骤" class="headerlink" title="2 实践步骤"></a>2 实践步骤</h2><blockquote>
+<p>使用Jenkins配置一条简单流水线，并从GitHub拉取一个Golang项目代码、编译、构建Docker镜像、并部署到ECS</p>
+</blockquote>
+<h3 id="2-1-前置条件"><a href="#2-1-前置条件" class="headerlink" title="2.1 前置条件"></a>2.1 前置条件</h3><p>1 安装并启动Jenkin。安装方式：</p>
+<ul>
+<li><a href="https://jenkins.io/zh/download/" target="_blank" rel="noopener">官网直接下载</a></li>
+<li>包管理工具</li>
+<li><a href="https://hub.docker.com/r/jenkins/jenkins" target="_blank" rel="noopener">Jenkins Docker</a></li>
+</ul>
+<p>2 安装Jenkins插件并完成配置：Docker plugin, Go Plugin</p>
+<h3 id="2-2-步骤"><a href="#2-2-步骤" class="headerlink" title="2.2 步骤"></a>2.2 步骤</h3><h4 id="2-2-1-新建任务"><a href="#2-2-1-新建任务" class="headerlink" title="2.2.1 新建任务"></a>2.2.1 新建任务</h4><p>选择<strong>构建一个自由风格的软件项目</strong><br><img src alt="新建任务"></p>
+<h4 id="2-2-2-配置源码管理、构建环境等"><a href="#2-2-2-配置源码管理、构建环境等" class="headerlink" title="2.2.2 配置源码管理、构建环境等"></a>2.2.2 配置源码管理、构建环境等</h4><p>GitHub项目：<a href="https://github.com/scau-ltd/have-you-ordered.git" target="_blank" rel="noopener">have-you-ordered</a></p>
+<p><code>源码管理</code>选择Git并输入仓库地址</p>
+<p><code>构建环境</code>勾上<code>Set up Go programming language tools</code>并选择相应版本</p>
+<p>此处需要提前在系统设置中配置</p>
+<h4 id="2-2-3-编写构建步骤"><a href="#2-2-3-编写构建步骤" class="headerlink" title="2.2.3 编写构建步骤"></a>2.2.3 编写构建步骤</h4><p>构建步骤：</p>
+<ol>
+<li><p>执行shell</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">go env -w GOPROXY=https://goproxy.cn,direct</span><br><span class="line">go build cmd/orderserver/orderserver.go</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Build / Publish Docker Image<br><img src alt="Build / Publish Docker Image"></p>
+</li>
+<li><p>Run Docker Containers<br><img src alt="Run Docker Containers"></p>
+</li>
+</ol>
+<h4 id="2-2-4-开始构建"><a href="#2-2-4-开始构建" class="headerlink" title="2.2.4 开始构建"></a>2.2.4 开始构建</h4><p>控制台输出 Console Output<br><img src alt="控制台输出"></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Jenkins</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">CI/CD</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+	<div class="article-category tagcloud">
+		<i class="icon-book icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="/categories/Jenkins//" class="article-tag-list-link color3">Jenkins</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="/categories/Jenkins/CI-CD//" class="article-tag-list-link color1">CI/CD</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/10/30/Jenkins初探/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-IPFS初探" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/10/20/IPFS初探/">IPFS 初探</a>
+    </h1>
+  
+
+        
+        <a href="/2019/10/20/IPFS初探/" class="archive-article-date">
+  	<time datetime="2019-10-20T00:48:40.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-10-20</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="IPFS-初探"><a href="#IPFS-初探" class="headerlink" title="IPFS 初探"></a>IPFS 初探</h1><h2 id="1-IPFS"><a href="#1-IPFS" class="headerlink" title="1 IPFS"></a>1 IPFS</h2>
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">IPFS</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">区块链</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+	<div class="article-category tagcloud">
+		<i class="icon-book icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="/categories/IPFS//" class="article-tag-list-link color5">IPFS</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="/categories/IPFS/区块链//" class="article-tag-list-link color4">区块链</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/10/20/IPFS初探/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-Docker-Alpine-作为-Golang-基础镜像的坑" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -726,6 +1127,22 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">IPFS</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">区块链</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">Jenkins</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">CI/CD</a>
+              </li>
+             
+              <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">Golang</a>
               </li>
              
@@ -735,6 +1152,22 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color2">Alpine</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">Spring Cloud</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">Spring Cloud Gateway</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">Reactor</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">WebFlux</a>
               </li>
              
               <li class="article-tag-list-item">

@@ -6,20 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>基础镜像选择问题 | Alpine作为基础镜像的坑 | 踩坑日志——吴伟杰</title>
+  <title>IPFS 初探 | 踩坑日志——吴伟杰</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="基础镜像选择问题 | Alpine作为基础镜像的坑1 大致流程 alpine镜像体积只有5MB，作为Docker下最小的Linux镜像，很适合打造一些轻量级镜像。但alpine底层使用musl-libc，兼容性与glibc有一定差距。   用Golang编写了一个简单的hello, world程序，Dockerfile使用alpine作为基础镜像FROM alpine:latest能够正常运行；">
-<meta name="keywords" content="Golang,Docker,Alpine">
+  <meta name="description" content="IPFS 初探1 IPFS">
+<meta name="keywords" content="IPFS,区块链">
 <meta property="og:type" content="article">
-<meta property="og:title" content="基础镜像选择问题 | Alpine作为基础镜像的坑">
-<meta property="og:url" content="http://yoursite.com/2019/10/11/Docker-Alpine-作为-Golang-基础镜像的坑/index.html">
+<meta property="og:title" content="IPFS 初探">
+<meta property="og:url" content="http://yoursite.com/2019/10/20/IPFS初探/index.html">
 <meta property="og:site_name" content="踩坑日志——吴伟杰">
-<meta property="og:description" content="基础镜像选择问题 | Alpine作为基础镜像的坑1 大致流程 alpine镜像体积只有5MB，作为Docker下最小的Linux镜像，很适合打造一些轻量级镜像。但alpine底层使用musl-libc，兼容性与glibc有一定差距。   用Golang编写了一个简单的hello, world程序，Dockerfile使用alpine作为基础镜像FROM alpine:latest能够正常运行；">
+<meta property="og:description" content="IPFS 初探1 IPFS">
 <meta property="og:locale" content="cn">
-<meta property="og:updated_time" content="2019-10-11T15:45:56.598Z">
+<meta property="og:updated_time" content="2019-10-30T00:59:17.794Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="基础镜像选择问题 | Alpine作为基础镜像的坑">
-<meta name="twitter:description" content="基础镜像选择问题 | Alpine作为基础镜像的坑1 大致流程 alpine镜像体积只有5MB，作为Docker下最小的Linux镜像，很适合打造一些轻量级镜像。但alpine底层使用musl-libc，兼容性与glibc有一定差距。   用Golang编写了一个简单的hello, world程序，Dockerfile使用alpine作为基础镜像FROM alpine:latest能够正常运行；">
+<meta name="twitter:title" content="IPFS 初探">
+<meta name="twitter:description" content="IPFS 初探1 IPFS">
   
     <link rel="alternative" href="/atom.xml" title="踩坑日志——吴伟杰" type="application/atom+xml">
   
@@ -155,74 +155,27 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-Docker-Alpine-作为-Golang-基础镜像的坑" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-IPFS初探" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      基础镜像选择问题 | Alpine作为基础镜像的坑
+      IPFS 初探
     </h1>
   
 
         
-        <a href="/2019/10/11/Docker-Alpine-作为-Golang-基础镜像的坑/" class="archive-article-date">
-  	<time datetime="2019-10-11T14:48:06.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-10-11</time>
+        <a href="/2019/10/20/IPFS初探/" class="archive-article-date">
+  	<time datetime="2019-10-20T00:48:40.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-10-20</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="基础镜像选择问题-Alpine作为基础镜像的坑"><a href="#基础镜像选择问题-Alpine作为基础镜像的坑" class="headerlink" title="基础镜像选择问题 | Alpine作为基础镜像的坑"></a>基础镜像选择问题 | <code>Alpine</code>作为基础镜像的坑</h1><h2 id="1-大致流程"><a href="#1-大致流程" class="headerlink" title="1 大致流程"></a>1 大致流程</h2><ul>
-<li><code>alpine</code>镜像体积只有5MB，作为<code>Docker</code>下最小的Linux镜像，很适合打造一些轻量级镜像。但<code>alpine</code>底层使用<code>musl-libc</code>，兼容性与<code>glibc</code>有一定差距。</li>
-</ul>
-<ol>
-<li>用<code>Golang</code>编写了一个简单的hello, world程序，<code>Dockerfile</code>使用<code>alpine</code>作为基础镜像<code>FROM alpine:latest</code>能够正常运行；</li>
-<li>基于Gin框架Web应用，相似的Dockerfile文件，build完成后run的时候报了一些不明原因的错误，最后基础镜像改为<code>centos</code>或<code>alpine-glibc</code>后(<code>FROM centos:latest</code>)重新构建的镜像可以正常运行。</li>
-</ol>
-<h2 id="2-问题复现"><a href="#2-问题复现" class="headerlink" title="2 问题复现"></a>2 问题复现</h2><h3 id="2-1-使用alpine作为基础镜像构建Golang-hello-world应用，ENTRYPOINT使用sh运行程序"><a href="#2-1-使用alpine作为基础镜像构建Golang-hello-world应用，ENTRYPOINT使用sh运行程序" class="headerlink" title="2.1 使用alpine作为基础镜像构建Golang hello, world应用，ENTRYPOINT使用sh运行程序"></a>2.1 使用<code>alpine</code>作为基础镜像构建Golang <code>hello, world</code>应用，<code>ENTRYPOINT</code>使用<code>sh</code>运行程序</h3><h4 id="2-1-1-编写hello-world-Dockerfile，基础镜像alpine"><a href="#2-1-1-编写hello-world-Dockerfile，基础镜像alpine" class="headerlink" title="2.1.1 编写hello, world Dockerfile，基础镜像alpine"></a>2.1.1 编写<code>hello, world</code> Dockerfile，基础镜像alpine</h4><p>hello.go</p>
-<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">"fmt"</span></span><br><span class="line">	<span class="string">"os"</span></span><br><span class="line">	<span class="string">"flag"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> config = flag.String(<span class="string">"config"</span>, <span class="string">"go &amp; docker"</span>, <span class="string">"[-config value]"</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	flag.Parse()</span><br><span class="line">	fmt.Printf(<span class="string">"os.Args: %s\n"</span>, os.Args)</span><br><span class="line">	fmt.Printf(<span class="string">"hello, %s\n"</span>, *config)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> alpine:latest</span><br><span class="line"><span class="keyword">ENV</span> PARAMS=<span class="string">""</span></span><br><span class="line"><span class="keyword">WORKDIR</span><span class="bash"> /</span></span><br><span class="line"><span class="keyword">ADD</span><span class="bash"> hello /</span></span><br><span class="line"><span class="keyword">ENTRYPOINT</span><span class="bash"> [ <span class="string">"sh"</span>, <span class="string">"-c"</span>, <span class="string">"./hello <span class="variable">$PARAMS</span>"</span> ]</span></span><br></pre></td></tr></table></figure>
-
-<h4 id="2-1-2-构建镜像"><a href="#2-1-2-构建镜像" class="headerlink" title="2.1.2 构建镜像"></a>2.1.2 构建镜像</h4><p><code>docker build -t hellogo:0.9 .</code></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">Sending build context to Docker daemon  2.152MB</span><br><span class="line"></span><br><span class="line">Step 1/5 : FROM alpine:latest</span><br><span class="line"> ---&gt; 961769676411</span><br><span class="line">Step 2/5 : ENV PARAMS=&quot;&quot;</span><br><span class="line"> ---&gt; Using cache</span><br><span class="line"> ---&gt; 3d8a4e790bbf</span><br><span class="line">Step 3/5 : WORKDIR /</span><br><span class="line"> ---&gt; Using cache</span><br><span class="line"> ---&gt; f693abea2696</span><br><span class="line">Step 4/5 : ADD hello /</span><br><span class="line"> ---&gt; Using cache</span><br><span class="line"> ---&gt; 156c71a0b934</span><br><span class="line">Step 5/5 : ENTRYPOINT [ &quot;sh&quot;, &quot;-c&quot;, &quot;./hello $PARAMS&quot; ]</span><br><span class="line"> ---&gt; Using cache</span><br><span class="line"> ---&gt; c5d4aa11a311</span><br><span class="line">Successfully built c5d4aa11a311</span><br><span class="line">Successfully tagged hellogo:0.9</span><br></pre></td></tr></table></figure>
-
-<h4 id="2-1-3-运行"><a href="#2-1-3-运行" class="headerlink" title="2.1.3 运行"></a>2.1.3 运行</h4><p><code>docker run --rm hellogo:0.9</code></p>
-<p>输出结果</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">os.Args: [./hello]</span><br><span class="line">hello, go &amp; docker</span><br></pre></td></tr></table></figure>
-
-<p>由此可见，<strong>运行hello, world没啥问题</strong></p>
-<h3 id="2-2-使用alpine作为基础镜像构建web应用，ENTRYPOINT使用sh运行程序"><a href="#2-2-使用alpine作为基础镜像构建web应用，ENTRYPOINT使用sh运行程序" class="headerlink" title="2.2 使用alpine作为基础镜像构建web应用，ENTRYPOINT使用sh运行程序"></a>2.2 使用<code>alpine</code>作为基础镜像构建web应用，<code>ENTRYPOINT</code>使用<code>sh</code>运行程序</h3><h4 id="2-2-1-编写Dockerfile，基础镜像alpine"><a href="#2-2-1-编写Dockerfile，基础镜像alpine" class="headerlink" title="2.2.1 编写Dockerfile，基础镜像alpine"></a>2.2.1 编写Dockerfile，基础镜像alpine</h4><figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> alpine:latest</span><br><span class="line"><span class="keyword">WORKDIR</span><span class="bash"> /</span></span><br><span class="line"><span class="keyword">ENV</span> PARAMS=<span class="string">""</span></span><br><span class="line"><span class="keyword">ADD</span><span class="bash"> orderserver /</span></span><br><span class="line"><span class="keyword">ADD</span><span class="bash"> configs /configs</span></span><br><span class="line"><span class="keyword">EXPOSE</span> <span class="number">60001</span></span><br><span class="line"><span class="keyword">ENTRYPOINT</span><span class="bash"> [<span class="string">"sh"</span>, <span class="string">"-c"</span>, <span class="string">"/orderserver <span class="variable">$PARAMS</span>"</span>]</span></span><br></pre></td></tr></table></figure>
-
-<h4 id="2-2-2-构建镜像"><a href="#2-2-2-构建镜像" class="headerlink" title="2.2.2 构建镜像"></a>2.2.2 构建镜像</h4><p>执行命令<code>docker build -t orderserver:build-with-alpine .</code></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">Sending build context to Docker daemon  23.83MB</span><br><span class="line"></span><br><span class="line">Step 1/7 : FROM alpine:latest</span><br><span class="line"> ---&gt; 961769676411</span><br><span class="line">Step 2/7 : WORKDIR /</span><br><span class="line"> ---&gt; Running in 4e77f58acc2a</span><br><span class="line">Removing intermediate container 4e77f58acc2a</span><br><span class="line"> ---&gt; 576bb22ca7c6</span><br><span class="line">Step 3/7 : ENV PARAMS=&quot;&quot;</span><br><span class="line"> ---&gt; Running in 7d601c97afad</span><br><span class="line">Removing intermediate container 7d601c97afad</span><br><span class="line"> ---&gt; d1bbcbd11e4f</span><br><span class="line">Step 4/7 : ADD orderserver /</span><br><span class="line"> ---&gt; e804183d1957</span><br><span class="line">Step 5/7 : ADD configs /configs</span><br><span class="line"> ---&gt; 5f22f0e5e099</span><br><span class="line">Step 6/7 : EXPOSE 60001</span><br><span class="line"> ---&gt; Running in 849525af1bad</span><br><span class="line">Removing intermediate container 849525af1bad</span><br><span class="line"> ---&gt; 354f12aa7c3d</span><br><span class="line">Step 7/7 : ENTRYPOINT [&quot;sh&quot;, &quot;-c&quot;, &quot;/orderserver $PARAMS&quot;]</span><br><span class="line"> ---&gt; Running in 4119e9b8543a</span><br><span class="line">Removing intermediate container 4119e9b8543a</span><br><span class="line"> ---&gt; 40c84a5e3673</span><br><span class="line">Successfully built 40c84a5e3673</span><br><span class="line">Successfully tagged orderserver:build-with-alpine</span><br></pre></td></tr></table></figure>
-
-<h4 id="2-2-3-启动镜像"><a href="#2-2-3-启动镜像" class="headerlink" title="2.2.3 启动镜像"></a>2.2.3 启动镜像</h4><p><code>docker run -P --rm --name orderserver0 -v /docker/data/have-you-ordered/configs:/mounted -e PARAMS=&quot;-config /mounted/config.json&quot; orderserver:build-with-alpine</code></p>
-<p><code>docker : sh: /orderserver: not found</code></p>
-<p>镜像因为不明原因报了找不到orderserver文件</p>
-<h3 id="2-3-使用alpine作为基础镜像构建，ENTRYPOINT直接执行目标二进制文件，有更详细的报错信息，但仍然难以排查原因"><a href="#2-3-使用alpine作为基础镜像构建，ENTRYPOINT直接执行目标二进制文件，有更详细的报错信息，但仍然难以排查原因" class="headerlink" title="2.3 使用alpine作为基础镜像构建，ENTRYPOINT直接执行目标二进制文件，有更详细的报错信息，但仍然难以排查原因"></a>2.3 使用<code>alpine</code>作为基础镜像构建，<code>ENTRYPOINT</code>直接执行目标二进制文件，有更详细的报错信息，但仍然难以排查原因</h3><h4 id="2-3-1-编写Dockerfile，ENTRYPOINT直接执行目标程序"><a href="#2-3-1-编写Dockerfile，ENTRYPOINT直接执行目标程序" class="headerlink" title="2.3.1 编写Dockerfile，ENTRYPOINT直接执行目标程序"></a>2.3.1 编写<code>Dockerfile</code>，<code>ENTRYPOINT</code>直接执行目标程序</h4><figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> alpine:latest</span><br><span class="line"><span class="keyword">WORKDIR</span><span class="bash"> /</span></span><br><span class="line"><span class="keyword">ENV</span> PARAMS=<span class="string">""</span></span><br><span class="line"><span class="keyword">ADD</span><span class="bash"> orderserver /</span></span><br><span class="line"><span class="keyword">ADD</span><span class="bash"> configs /configs</span></span><br><span class="line"><span class="keyword">EXPOSE</span> <span class="number">60001</span></span><br><span class="line"><span class="comment">#ENTRYPOINT ["sh", "-c", "/orderserver $PARAMS"]</span></span><br><span class="line"><span class="keyword">ENTRYPOINT</span><span class="bash"> [<span class="string">"/orderserver"</span>]</span></span><br></pre></td></tr></table></figure>
-
-<h4 id="2-3-2-build"><a href="#2-3-2-build" class="headerlink" title="2.3.2 build"></a>2.3.2 build</h4><p><code>docker build -t orderserver:for-test .</code></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">Sending build context to Docker daemon  23.83MB</span><br><span class="line"></span><br><span class="line">Step 1/7 : FROM alpine:latest</span><br><span class="line"> ---&gt; 961769676411</span><br><span class="line">Step 2/7 : WORKDIR /</span><br><span class="line"> ---&gt; Running in 94a464e58a2a</span><br><span class="line">Removing intermediate container 94a464e58a2a</span><br><span class="line"> ---&gt; a2bd2111ff1a</span><br><span class="line">Step 3/7 : ENV PARAMS=&quot;&quot;</span><br><span class="line"> ---&gt; Running in d836703cad25</span><br><span class="line">Removing intermediate container d836703cad25</span><br><span class="line"> ---&gt; 1beadaa8423a</span><br><span class="line">Step 4/7 : ADD orderserver /</span><br><span class="line"> ---&gt; a10094c7eebb</span><br><span class="line">Step 5/7 : ADD configs /configs</span><br><span class="line"> ---&gt; 6e80ce8fb8cd</span><br><span class="line">Step 6/7 : EXPOSE 60001</span><br><span class="line"> ---&gt; Running in c70a05d12a5f</span><br><span class="line">Removing intermediate container c70a05d12a5f</span><br><span class="line"> ---&gt; c9d7ea756259</span><br><span class="line">Step 7/7 : ENTRYPOINT [&quot;/orderserver&quot;]</span><br><span class="line"> ---&gt; Running in 430fd5268cf0</span><br><span class="line">Removing intermediate container 430fd5268cf0</span><br><span class="line"> ---&gt; 9bb02c756cd0</span><br><span class="line">Successfully built 9bb02c756cd0</span><br><span class="line">Successfully tagged orderserver:for-test</span><br></pre></td></tr></table></figure>
-
-<h4 id="2-3-3-运行镜像"><a href="#2-3-3-运行镜像" class="headerlink" title="2.3.3 运行镜像"></a>2.3.3 运行镜像</h4><p>报错信息：<br><code>docker : standard_init_linux.go:211: exec user process caused &quot;no such file or directory&quot;</code></p>
-<p>与使用sh执行相比，报错信息更详细，不过貌似对问题排查仍然没什么帮助</p>
-<h3 id="2-4-使用frolvlad-alpine-glibc作为基础镜像构建并运行"><a href="#2-4-使用frolvlad-alpine-glibc作为基础镜像构建并运行" class="headerlink" title="2.4 使用frolvlad/alpine-glibc作为基础镜像构建并运行"></a>2.4 使用<code>frolvlad/alpine-glibc</code>作为基础镜像构建并运行</h3><h4 id="2-4-1-编写Dockerfile，基础镜像alpine-glibc"><a href="#2-4-1-编写Dockerfile，基础镜像alpine-glibc" class="headerlink" title="2.4.1 编写Dockerfile，基础镜像alpine-glibc"></a>2.4.1 编写<code>Dockerfile</code>，基础镜像<code>alpine-glibc</code></h4><figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> frolvlad/alpine-glibc:latest</span><br><span class="line"><span class="keyword">WORKDIR</span><span class="bash"> /</span></span><br><span class="line"><span class="keyword">ENV</span> PARAMS=<span class="string">""</span></span><br><span class="line"><span class="keyword">ADD</span><span class="bash"> orderserver /</span></span><br><span class="line"><span class="keyword">ADD</span><span class="bash"> configs /configs</span></span><br><span class="line"><span class="keyword">EXPOSE</span> <span class="number">60001</span></span><br><span class="line"><span class="keyword">ENTRYPOINT</span><span class="bash"> [<span class="string">"sh"</span>, <span class="string">"-c"</span>, <span class="string">"/orderserver <span class="variable">$PARAMS</span>"</span>]</span></span><br></pre></td></tr></table></figure>
-
-<h4 id="2-4-2-构建镜像"><a href="#2-4-2-构建镜像" class="headerlink" title="2.4.2 构建镜像"></a>2.4.2 构建镜像</h4><p><code>docker build -t orderserver:using-glibc .</code></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">Sending build context to Docker daemon  23.83MB</span><br><span class="line"></span><br><span class="line">Step 1/7 : FROM frolvlad/alpine-glibc:latest</span><br><span class="line"> ---&gt; e8076a77c225</span><br><span class="line">Step 2/7 : WORKDIR /</span><br><span class="line"> ---&gt; Running in fc67e5d9e5fa</span><br><span class="line">Removing intermediate container fc67e5d9e5fa</span><br><span class="line"> ---&gt; 2ced8d6cdaf2</span><br><span class="line">Step 3/7 : ENV PARAMS=&quot;&quot;</span><br><span class="line"> ---&gt; Running in fbb048b38832</span><br><span class="line">Removing intermediate container fbb048b38832</span><br><span class="line"> ---&gt; bec33277d8a1</span><br><span class="line">Step 4/7 : ADD orderserver /</span><br><span class="line"> ---&gt; 7df727ecfc51</span><br><span class="line">Step 5/7 : ADD configs /configs</span><br><span class="line"> ---&gt; 5dc592e179c3</span><br><span class="line">Step 6/7 : EXPOSE 60001</span><br><span class="line"> ---&gt; Running in 001fa109df4e</span><br><span class="line">Removing intermediate container 001fa109df4e</span><br><span class="line"> ---&gt; e1a8e1f7a580</span><br><span class="line">Step 7/7 : ENTRYPOINT [&quot;sh&quot;, &quot;-c&quot;, &quot;/orderserver $PARAMS&quot;]</span><br><span class="line"> ---&gt; Running in 06fc223499e5</span><br><span class="line">Removing intermediate container 06fc223499e5</span><br><span class="line"> ---&gt; 0c819ac833c6</span><br><span class="line">Successfully built 0c819ac833c6</span><br><span class="line">Successfully tagged orderserver:using-glibc</span><br></pre></td></tr></table></figure>
-
-<h4 id="2-4-3-启动镜像"><a href="#2-4-3-启动镜像" class="headerlink" title="2.4.3 启动镜像"></a>2.4.3 启动镜像</h4><p><code>docker run -P --rm --name orderserver0 -v /docker/data/have-you-ordered/configs:/mounted -e PARAMS=&quot;-config /mounted/config.json&quot; orderserver:using-glibc</code></p>
-<p>看到一下信息代表Web应用能够正常启动了，底下报错只是因为没有配置Elasticsearch</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">2019/10/11 09:27:48 &#123;&#123;[http://es.0:49204]  &#125; :60001 having-meal 1h&#125;</span><br><span class="line">os.Args: [/orderserver -config /mounted/config.json]</span><br><span class="line">[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.</span><br><span class="line">[GIN-debug] [WARNING] Running in &quot;debug&quot; mode. Switch to &quot;release&quot; mode in production.</span><br><span class="line"> - using env:	export GIN_MODE=release</span><br><span class="line"> - using code:	gin.SetMode(gin.ReleaseMode)</span><br><span class="line">[GIN-debug] GET    /api                      --&gt; have-you-ordered/internal/app/orderserver.ApiHelloGo (3 handlers)</span><br><span class="line">[GIN-debug] GET    /api/ordered/:date        --&gt; have-you-ordered/internal/app/orderserver.ApiOrdered (3 handlers)</span><br><span class="line">[GIN-debug] POST   /api/order                --&gt; have-you-ordered/internal/app/orderserver.PostOrder (3 handlers)</span><br><span class="line">[GIN-debug] POST   /api/fake-order           --&gt; have-you-ordered/cmd/orderserver/app.Run.func1 (3 handlers)</span><br><span class="line">[GIN-debug] GET    /api/dashboard/agg-by-day --&gt; have-you-ordered/internal/app/orderserver.AggHistogram (3 handlers)</span><br><span class="line">[GIN-debug] POST   /api/control/fetch        --&gt; have-you-ordered/internal/app/orderserver.ManuallyFetch (3 handlers)</span><br><span class="line">[GIN-debug] Listening and serving HTTP on :60001</span><br><span class="line">2019/10/11 09:27:48 Start Fetch Interval: 3600 sec</span><br><span class="line">2019/10/11 09:27:48 Error getting response: dial tcp 127.0.0.1:49204: connect: connection refused</span><br><span class="line">2019/10/11 09:27:48 Fetch interval error: runtime error: invalid memory address or nil pointer dereference</span><br></pre></td></tr></table></figure>
-
-<h2 id="3-总结"><a href="#3-总结" class="headerlink" title="3 总结"></a>3 总结</h2><ol>
-<li>选择基础镜像需要谨慎</li>
-</ol>
-
+        <h1 id="IPFS-初探"><a href="#IPFS-初探" class="headerlink" title="IPFS 初探"></a>IPFS 初探</h1><h2 id="1-IPFS"><a href="#1-IPFS" class="headerlink" title="1 IPFS"></a>1 IPFS</h2>
       
 
       
@@ -256,15 +209,11 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">Golang</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">IPFS</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">Docker</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">Alpine</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">区块链</a>
         		</li>
       		
 		</ul>
@@ -276,11 +225,11 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="/categories/Docker//" class="article-tag-list-link color2">Docker</a>
+        			<a href="/categories/IPFS//" class="article-tag-list-link color5">IPFS</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="/categories/Docker/踩坑//" class="article-tag-list-link color3">踩坑</a>
+        			<a href="/categories/IPFS/区块链//" class="article-tag-list-link color4">区块链</a>
         		</li>
       		
 		</ul>
@@ -335,7 +284,7 @@
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/10/11/Docker-Alpine-作为-Golang-基础镜像的坑/" alt="微信分享二维码">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2019/10/20/IPFS初探/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -349,18 +298,18 @@
   
 <nav id="article-nav">
   
-    <a href="/2019/10/20/IPFS初探/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2019/10/30/Jenkins初探/" id="article-nav-newer" class="article-nav-link-wrap">
       <i class="icon-circle-left"></i>
       <div class="article-nav-title">
         
-          IPFS 初探
+          Jenkins 初探
         
       </div>
     </a>
   
   
-    <a href="/2019/09/09/hello-world/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">Hello World</div>
+    <a href="/2019/10/11/Docker-Alpine-作为-Golang-基础镜像的坑/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">基础镜像选择问题 | Alpine作为基础镜像的坑</div>
       <i class="icon-circle-right"></i>
     </a>
   
@@ -387,7 +336,7 @@
                 </span>
                 <span class="tooltip-content">
                     <div class="toc-article">
-                    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#基础镜像选择问题-Alpine作为基础镜像的坑"><span class="toc-number">1.</span> <span class="toc-text">基础镜像选择问题 | Alpine作为基础镜像的坑</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-大致流程"><span class="toc-number">1.1.</span> <span class="toc-text">1 大致流程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-问题复现"><span class="toc-number">1.2.</span> <span class="toc-text">2 问题复现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-使用alpine作为基础镜像构建Golang-hello-world应用，ENTRYPOINT使用sh运行程序"><span class="toc-number">1.2.1.</span> <span class="toc-text">2.1 使用alpine作为基础镜像构建Golang hello, world应用，ENTRYPOINT使用sh运行程序</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-1-1-编写hello-world-Dockerfile，基础镜像alpine"><span class="toc-number">1.2.1.1.</span> <span class="toc-text">2.1.1 编写hello, world Dockerfile，基础镜像alpine</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-1-2-构建镜像"><span class="toc-number">1.2.1.2.</span> <span class="toc-text">2.1.2 构建镜像</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-1-3-运行"><span class="toc-number">1.2.1.3.</span> <span class="toc-text">2.1.3 运行</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-使用alpine作为基础镜像构建web应用，ENTRYPOINT使用sh运行程序"><span class="toc-number">1.2.2.</span> <span class="toc-text">2.2 使用alpine作为基础镜像构建web应用，ENTRYPOINT使用sh运行程序</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-1-编写Dockerfile，基础镜像alpine"><span class="toc-number">1.2.2.1.</span> <span class="toc-text">2.2.1 编写Dockerfile，基础镜像alpine</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-2-构建镜像"><span class="toc-number">1.2.2.2.</span> <span class="toc-text">2.2.2 构建镜像</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-3-启动镜像"><span class="toc-number">1.2.2.3.</span> <span class="toc-text">2.2.3 启动镜像</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-使用alpine作为基础镜像构建，ENTRYPOINT直接执行目标二进制文件，有更详细的报错信息，但仍然难以排查原因"><span class="toc-number">1.2.3.</span> <span class="toc-text">2.3 使用alpine作为基础镜像构建，ENTRYPOINT直接执行目标二进制文件，有更详细的报错信息，但仍然难以排查原因</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-1-编写Dockerfile，ENTRYPOINT直接执行目标程序"><span class="toc-number">1.2.3.1.</span> <span class="toc-text">2.3.1 编写Dockerfile，ENTRYPOINT直接执行目标程序</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-2-build"><span class="toc-number">1.2.3.2.</span> <span class="toc-text">2.3.2 build</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-3-运行镜像"><span class="toc-number">1.2.3.3.</span> <span class="toc-text">2.3.3 运行镜像</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-使用frolvlad-alpine-glibc作为基础镜像构建并运行"><span class="toc-number">1.2.4.</span> <span class="toc-text">2.4 使用frolvlad/alpine-glibc作为基础镜像构建并运行</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-1-编写Dockerfile，基础镜像alpine-glibc"><span class="toc-number">1.2.4.1.</span> <span class="toc-text">2.4.1 编写Dockerfile，基础镜像alpine-glibc</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-2-构建镜像"><span class="toc-number">1.2.4.2.</span> <span class="toc-text">2.4.2 构建镜像</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-4-3-启动镜像"><span class="toc-number">1.2.4.3.</span> <span class="toc-text">2.4.3 启动镜像</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-总结"><span class="toc-number">1.3.</span> <span class="toc-text">3 总结</span></a></li></ol></li></ol>
+                    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#IPFS-初探"><span class="toc-number">1.</span> <span class="toc-text">IPFS 初探</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-IPFS"><span class="toc-number">1.1.</span> <span class="toc-text">1 IPFS</span></a></li></ol></li></ol>
                     </div>
                 </span>
             </div>

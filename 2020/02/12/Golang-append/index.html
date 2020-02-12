@@ -6,19 +6,25 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Archives: 2019/10 | 踩坑日志——吴伟杰</title>
+  <title>Golang 内置函数 append() 踩坑 | 踩坑日志——吴伟杰</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="烫烫烫锟斤拷">
-<meta name="keywords" content="锟斤拷,烫烫烫,踩坑,吴伟杰">
-<meta property="og:type" content="website">
-<meta property="og:title" content="踩坑日志——吴伟杰">
-<meta property="og:url" content="http://yoursite.com/archives/2019/10/index.html">
+  <meta name="description" content="Golang 内置函数 append() 踩坑1 场景重现 用 Golang 完成 leetcode-78.子集 的时候，发现执行某个测试用例输出了错误的答案，子集中包含了两组相同的集合。  1.1 解题题目: 123456789101112131415161718192021给定一组不含重复元素的整数数组 nums，返回该数组所有可能的子集（幂集）。说明：解集不能包含重复的子集。示例:输入: n">
+<meta name="keywords" content="Golang,Slice">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Golang 内置函数 append() 踩坑">
+<meta property="og:url" content="http://yoursite.com/2020/02/12/Golang-append/index.html">
 <meta property="og:site_name" content="踩坑日志——吴伟杰">
-<meta property="og:description" content="烫烫烫锟斤拷">
+<meta property="og:description" content="Golang 内置函数 append() 踩坑1 场景重现 用 Golang 完成 leetcode-78.子集 的时候，发现执行某个测试用例输出了错误的答案，子集中包含了两组相同的集合。  1.1 解题题目: 123456789101112131415161718192021给定一组不含重复元素的整数数组 nums，返回该数组所有可能的子集（幂集）。说明：解集不能包含重复的子集。示例:输入: n">
 <meta property="og:locale" content="cn">
+<meta property="og:image" content="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2020/02/golang-append/output.png">
+<meta property="og:image" content="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2020/02/golang-append/step1.png">
+<meta property="og:image" content="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2020/02/golang-append/step2.png">
+<meta property="og:image" content="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2020/02/golang-append/step2.png">
+<meta property="og:updated_time" content="2020-02-12T12:41:29.921Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="踩坑日志——吴伟杰">
-<meta name="twitter:description" content="烫烫烫锟斤拷">
+<meta name="twitter:title" content="Golang 内置函数 append() 踩坑">
+<meta name="twitter:description" content="Golang 内置函数 append() 踩坑1 场景重现 用 Golang 完成 leetcode-78.子集 的时候，发现执行某个测试用例输出了错误的答案，子集中包含了两组相同的集合。  1.1 解题题目: 123456789101112131415161718192021给定一组不含重复元素的整数数组 nums，返回该数组所有可能的子集（幂集）。说明：解集不能包含重复的子集。示例:输入: n">
+<meta name="twitter:image" content="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2020/02/golang-append/output.png">
   
     <link rel="alternative" href="/atom.xml" title="踩坑日志——吴伟杰" type="application/atom+xml">
   
@@ -154,150 +160,91 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-Golang-append" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Golang 内置函数 append() 踩坑
+    </h1>
+  
+
+        
+        <a href="/2020/02/12/Golang-append/" class="archive-article-date">
+  	<time datetime="2020-02-12T02:10:18.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-02-12</time>
+</a>
+        
+      </header>
     
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="Golang-内置函数-append-踩坑"><a href="#Golang-内置函数-append-踩坑" class="headerlink" title="Golang 内置函数 append() 踩坑"></a>Golang 内置函数 append() 踩坑</h1><h2 id="1-场景重现"><a href="#1-场景重现" class="headerlink" title="1 场景重现"></a>1 场景重现</h2><blockquote>
+<p>用 Golang 完成 <a href="https://leetcode-cn.com/problems/subsets/" target="_blank" rel="noopener">leetcode-78.子集</a> 的时候，发现执行某个测试用例输出了错误的答案，子集中包含了两组相同的集合。</p>
+</blockquote>
+<h3 id="1-1-解题"><a href="#1-1-解题" class="headerlink" title="1.1 解题"></a>1.1 解题</h3><p>题目:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">给定一组不含重复元素的整数数组 nums，返回该数组所有可能的子集（幂集）。</span><br><span class="line"></span><br><span class="line">说明：解集不能包含重复的子集。</span><br><span class="line"></span><br><span class="line">示例:</span><br><span class="line">输入: nums = [1,2,3]</span><br><span class="line">输出:</span><br><span class="line">[</span><br><span class="line">  [3],</span><br><span class="line">  [1],</span><br><span class="line">  [2],</span><br><span class="line">  [1,2,3],</span><br><span class="line">  [1,3],</span><br><span class="line">  [2,3],</span><br><span class="line">  [1,2],</span><br><span class="line">  []</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line">来源：力扣（LeetCode）  </span><br><span class="line">链接：https://leetcode-cn.com/problems/subsets  </span><br><span class="line">著作权归领扣网络所有。商业转载请联系官方授权，非商业转载请注明出处。</span><br></pre></td></tr></table></figure>
+
+<p>我写的一个解答:</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">subsets</span><span class="params">(nums []<span class="keyword">int</span>)</span> [][]<span class="title">int</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> nums == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> [][]<span class="keyword">int</span>&#123;&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	sort.Ints(nums)</span><br><span class="line">	sets := [][]<span class="keyword">int</span>&#123;&#123;&#125;&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(nums); i++ &#123;</span><br><span class="line">		sets = <span class="built_in">append</span>(sets, sub([]<span class="keyword">int</span>&#123;&#125;, nums, i+<span class="number">1</span>)...)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> sets</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">sub</span><span class="params">(prefix, options []<span class="keyword">int</span>, need <span class="keyword">int</span>)</span> [][]<span class="title">int</span></span> &#123;</span><br><span class="line">	need--</span><br><span class="line">	<span class="keyword">var</span> sets [][]<span class="keyword">int</span></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(options); i++ &#123;</span><br><span class="line">		<span class="keyword">if</span> need &gt; <span class="number">0</span> &#123;</span><br><span class="line">			sets = <span class="built_in">append</span>(sets, sub(<span class="built_in">append</span>(prefix, options[i]), options[i+<span class="number">1</span>:], need)...)</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			sets = <span class="built_in">append</span>(sets, <span class="built_in">append</span>(prefix, options[i]))</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> sets</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>测试代码:</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> args <span class="keyword">struct</span> &#123;</span><br><span class="line">	nums []<span class="keyword">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> tests = []<span class="keyword">struct</span> &#123;</span><br><span class="line">	name <span class="keyword">string</span></span><br><span class="line">	args args</span><br><span class="line">	want [][]<span class="keyword">int</span></span><br><span class="line">&#125;&#123;</span><br><span class="line">	&#123;<span class="string">"sample-7"</span>, args&#123;[]<span class="keyword">int</span>&#123;<span class="number">5</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>&#125;&#125;, [][]<span class="keyword">int</span>&#123;&#123;&#125;, &#123;<span class="number">5</span>&#125;, &#123;<span class="number">1</span>&#125;, &#123;<span class="number">1</span>, <span class="number">5</span>&#125;, &#123;<span class="number">2</span>&#125;, &#123;<span class="number">2</span>, <span class="number">5</span>&#125;, &#123;<span class="number">1</span>, <span class="number">2</span>&#125;, &#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">5</span>&#125;, &#123;<span class="number">3</span>&#125;, &#123;<span class="number">3</span>, <span class="number">5</span>&#125;, &#123;<span class="number">1</span>, <span class="number">3</span>&#125;, &#123;<span class="number">1</span>, <span class="number">3</span>, <span class="number">5</span>&#125;, &#123;<span class="number">2</span>, <span class="number">3</span>&#125;, &#123;<span class="number">2</span>, <span class="number">3</span>, <span class="number">5</span>&#125;, &#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>&#125;, &#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">5</span>&#125;, &#123;<span class="number">4</span>&#125;, &#123;<span class="number">4</span>, <span class="number">5</span>&#125;, &#123;<span class="number">1</span>, <span class="number">4</span>&#125;, &#123;<span class="number">1</span>, <span class="number">4</span>, <span class="number">5</span>&#125;, &#123;<span class="number">2</span>, <span class="number">4</span>&#125;, &#123;<span class="number">2</span>, <span class="number">4</span>, <span class="number">5</span>&#125;, &#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">4</span>&#125;, &#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">4</span>, <span class="number">5</span>&#125;, &#123;<span class="number">3</span>, <span class="number">4</span>&#125;, &#123;<span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>&#125;, &#123;<span class="number">1</span>, <span class="number">3</span>, <span class="number">4</span>&#125;, &#123;<span class="number">1</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>&#125;, &#123;<span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>&#125;, &#123;<span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>&#125;, &#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>&#125;, &#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>&#125;&#125;&#125;,</span><br><span class="line">	&#123;<span class="string">"sample-0"</span>, args&#123;[]<span class="keyword">int</span>&#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>&#125;&#125;, [][]<span class="keyword">int</span>&#123;&#123;<span class="number">3</span>&#125;, &#123;<span class="number">1</span>&#125;, &#123;<span class="number">2</span>&#125;, &#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>&#125;, &#123;<span class="number">1</span>, <span class="number">3</span>&#125;, &#123;<span class="number">2</span>, <span class="number">3</span>&#125;, &#123;<span class="number">1</span>, <span class="number">2</span>&#125;, &#123;&#125;&#125;&#125;,</span><br><span class="line">	&#123;<span class="string">"case-0"</span>, args&#123;[]<span class="keyword">int</span>&#123;<span class="number">1</span>, <span class="number">2</span>&#125;&#125;, [][]<span class="keyword">int</span>&#123;&#123;<span class="number">1</span>&#125;, &#123;<span class="number">2</span>&#125;, &#123;<span class="number">1</span>, <span class="number">2</span>&#125;, &#123;&#125;&#125;&#125;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Test_subsets</span><span class="params">(t *testing.T)</span></span> &#123;</span><br><span class="line">	<span class="keyword">for</span> _, tt := <span class="keyword">range</span> tests &#123;</span><br><span class="line">		t.Run(tt.name, <span class="function"><span class="keyword">func</span><span class="params">(t *testing.T)</span></span> &#123;</span><br><span class="line">			<span class="keyword">if</span> got := p78_1.Subsets(tt.args.nums); !util.EqualsIgnoreOrder(got, tt.want) &#123;</span><br><span class="line">				t.Errorf(<span class="string">"subsets() = %v, want %v"</span>, got, tt.want)</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>测试结果:<br><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2020/02/golang-append/output.png" alt="output"><br>“sample-0”, “case-0”的执行结果都正确；<br>但”sample-7”的实际输出结果少了子集<code>[1,2,3,4]</code>，出现了两个<code>[1,2,3,5]</code></p>
+<h3 id="Debug"><a href="#Debug" class="headerlink" title="Debug"></a>Debug</h3><p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2020/02/golang-append/step1.png" alt="step1"><br>将代码运行到输出<code>[1,2,3,5]</code>前一步，发现子集变量sets里面已经有一个切片<code>[1,2,3,4]</code>，为什么最后的答案中没有？<br>继续执行下一步，sets的预期结果是<code>[[1,2,3,4],[1,2,3,5]]</code></p>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2020/02/golang-append/step2.png" alt="step2"><br>子集sets中确实新增了一个切片<code>[1,2,3,5]</code>，<strong>但原本的<code>[1,2,3,4]</code>中第3个元素也变成了5</strong>，这是WA的直接原因。  </p>
+<h3 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h3><p>将prefix复制一份副本后，再进行append操作，提交结果为<strong>AC</strong></p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">subsets</span><span class="params">(nums []<span class="keyword">int</span>)</span> [][]<span class="title">int</span></span> &#123;</span><br><span class="line">	<span class="keyword">if</span> nums == <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> [][]<span class="keyword">int</span>&#123;&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	sort.Ints(nums)</span><br><span class="line">	sets := [][]<span class="keyword">int</span>&#123;&#123;&#125;&#125;</span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(nums); i++ &#123;</span><br><span class="line">		sets = <span class="built_in">append</span>(sets, sub([]<span class="keyword">int</span>&#123;&#125;, nums, i+<span class="number">1</span>)...)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> sets</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">sub</span><span class="params">(prefix, options []<span class="keyword">int</span>, need <span class="keyword">int</span>)</span> [][]<span class="title">int</span></span> &#123;</span><br><span class="line">	need--</span><br><span class="line">	<span class="keyword">var</span> sets [][]<span class="keyword">int</span></span><br><span class="line">	<span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(options); i++ &#123;</span><br><span class="line">		<span class="comment">// todo take notes</span></span><br><span class="line">		copied := <span class="built_in">make</span>([]<span class="keyword">int</span>, <span class="built_in">len</span>(prefix))</span><br><span class="line">		<span class="built_in">copy</span>(copied, prefix)</span><br><span class="line">		<span class="keyword">if</span> need &gt; <span class="number">0</span> &#123;</span><br><span class="line">			sets = <span class="built_in">append</span>(sets, sub(<span class="built_in">append</span>(copied, options[i]), options[i+<span class="number">1</span>:], need)...)</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			sets = <span class="built_in">append</span>(sets, <span class="built_in">append</span>(copied, options[i]))</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> sets</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-理解append-函数"><a href="#2-理解append-函数" class="headerlink" title="2 理解append()函数"></a>2 理解append()函数</h2><h3 id="2-1-测试append-函数"><a href="#2-1-测试append-函数" class="headerlink" title="2.1 测试append()函数"></a>2.1 测试append()函数</h3><p>看下面这段测试代码，执行完毕后，a和b的中的元素分别是什么？</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TestAppend_0</span><span class="params">(t *testing.T)</span></span> &#123;</span><br><span class="line">	base := <span class="built_in">make</span>([]<span class="keyword">int</span>, <span class="number">0</span>, <span class="number">1</span>)</span><br><span class="line">	base = <span class="built_in">append</span>(base, <span class="number">100</span>)</span><br><span class="line">	fmt.Printf(<span class="string">"len(base) = %v, cap(base) = %v\n"</span>, <span class="built_in">len</span>(base), <span class="built_in">cap</span>(base))</span><br><span class="line">	<span class="comment">// equivalent</span></span><br><span class="line">	<span class="comment">// base := []int&#123;100&#125;</span></span><br><span class="line">	a := <span class="built_in">append</span>(base, <span class="number">200</span>)</span><br><span class="line">	b := <span class="built_in">append</span>(base, <span class="number">300</span>)</span><br><span class="line">	fmt.Printf(<span class="string">"base = %v\na = %v\nb = %v\n"</span>, base, a, b)</span><br><span class="line">	fmt.Printf(<span class="string">"addr:\nbase = %p\n   a = %p\n   b = %p\n"</span>, base, a, b)</span><br><span class="line">	fmt.Printf(<span class="string">"len(a) = %v, cap(a) = %v\n"</span>, <span class="built_in">len</span>(a), <span class="built_in">cap</span>(a))</span><br><span class="line">	fmt.Printf(<span class="string">"len(b) = %v, cap(b) = %v\n"</span>, <span class="built_in">len</span>(b), <span class="built_in">cap</span>(b))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TestAppend_1</span><span class="params">(t *testing.T)</span></span> &#123;</span><br><span class="line">	base := <span class="built_in">make</span>([]<span class="keyword">int</span>, <span class="number">0</span>, <span class="number">2</span>)</span><br><span class="line">	base = <span class="built_in">append</span>(base, <span class="number">100</span>)</span><br><span class="line">	fmt.Printf(<span class="string">"len(base) = %v, cap(base) = %v\n"</span>, <span class="built_in">len</span>(base), <span class="built_in">cap</span>(base))</span><br><span class="line">	a := <span class="built_in">append</span>(base, <span class="number">200</span>)</span><br><span class="line">	b := <span class="built_in">append</span>(base, <span class="number">300</span>)</span><br><span class="line">	fmt.Printf(<span class="string">"base = %v\na = %v\nb = %v\n"</span>, base, a, b)</span><br><span class="line">	fmt.Printf(<span class="string">"addr:\nbase = %p\n   a = %p\n   b = %p\n"</span>, base, a, b)</span><br><span class="line">	fmt.Printf(<span class="string">"len(a) = %v, cap(a) = %v\n"</span>, <span class="built_in">len</span>(a), <span class="built_in">cap</span>(a))</span><br><span class="line">	fmt.Printf(<span class="string">"len(b) = %v, cap(b) = %v\n"</span>, <span class="built_in">len</span>(b), <span class="built_in">cap</span>(b))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>运行结果：  </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">=== RUN   TestAppend_0</span><br><span class="line">len(base) = 1, cap(base) = 1</span><br><span class="line">base = [100]</span><br><span class="line">a = [100 200]</span><br><span class="line">b = [100 300]</span><br><span class="line">addr:</span><br><span class="line">base = 0xc00000c388</span><br><span class="line">   a = 0xc00000c3a0</span><br><span class="line">   b = 0xc00000c3b0</span><br><span class="line">len(a) = 2, cap(a) = 2</span><br><span class="line">len(b) = 2, cap(b) = 2</span><br><span class="line"></span><br><span class="line">=== RUN   TestAppend_1</span><br><span class="line">len(base) = 1, cap(base) = 2</span><br><span class="line">base = [100]</span><br><span class="line">a = [100 300]</span><br><span class="line">b = [100 300]</span><br><span class="line">addr:</span><br><span class="line">base = 0xc00000c390</span><br><span class="line">   a = 0xc00000c390</span><br><span class="line">   b = 0xc00000c390</span><br><span class="line">len(a) = 2, cap(a) = 2</span><br><span class="line">len(b) = 2, cap(b) = 2</span><br></pre></td></tr></table></figure>
+
+<p>在<code>TestAppend_0</code>中，<code>base</code>切片容量已满，因此调用<code>append(base, ...)</code>产生的新切片会发生扩容操作。</p>
+<p>在<code>TestAppend_1</code>中，<code>base</code>切片仍有空间，无需扩容，因此<code>append(base, ...)</code>操作基于切片原有的底层数组进行，<code>append(base, ...)</code>的返回值没有重新赋值给<code>base</code>，导致两次<code>append(base, ...)</code>都在原有数组同一个位置上操作。</p>
+<h3 id="2-2-回顾问题"><a href="#2-2-回顾问题" class="headerlink" title="2.2 回顾问题"></a>2.2 回顾问题</h3><p>现在回到WA的场景</p>
+<p><img src="https://wuweijie.oss-cn-shenzhen.aliyuncs.com/blog/resource/2020/02/golang-append/step2.png" alt="step2"></p>
+<p>可以看到，<code>prefix</code>是一个<code>len:3, cap:4</code>的切片，因此，加入<code>sets</code>变量中的切片其实是同一块内存，当这个切片不需要扩容的时候，使用<code>append()</code>函数会修改原有的内存，导致原有的正确答案<code>[1,2,3,4]</code>变成了<code>[1,2,3,5]</code>。</p>
+<h2 id="3-疑问"><a href="#3-疑问" class="headerlink" title="3 疑问"></a>3 疑问</h2><h3 id="3-1-切片地址相同，len却可以不同"><a href="#3-1-切片地址相同，len却可以不同" class="headerlink" title="3.1 切片地址相同，len却可以不同"></a>3.1 切片地址相同，len却可以不同</h3><p>回顾2.1节中的测试代码输出结果</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">=== RUN   TestAppend_1</span><br><span class="line">len(base) = 1, cap(base) = 2</span><br><span class="line">base = [100]</span><br><span class="line">a = [100 300]</span><br><span class="line">b = [100 300]</span><br><span class="line">addr:</span><br><span class="line">base = 0xc00000c390</span><br><span class="line">   a = 0xc00000c390</span><br><span class="line">   b = 0xc00000c390</span><br><span class="line">len(a) = 2, cap(a) = 2</span><br><span class="line">len(b) = 2, cap(b) = 2</span><br></pre></td></tr></table></figure>
+
+<p>结合定义在<code>runtime/slice.go</code>包中的切片的数据结构</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">package runtime</span><br><span class="line"></span><br><span class="line">type slice struct &#123;</span><br><span class="line">	array unsafe.Pointer</span><br><span class="line">	len   int</span><br><span class="line">	cap   int</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>为何切片地址相同，<code>len()</code>函数的返回值可以不同？</p>
+
+      
+
+      
+        <div class="page-reward">
+          <a href="javascript:;" class="page-reward-btn tooltip-top">
+            <div class="tooltip tooltip-east">
+            <span class="tooltip-item">
+              赏
+            </span>
+            <span class="tooltip-content">
+              <span class="tooltip-text">
+                <span class="tooltip-inner">
+                  <p class="reward-p"><i class="icon icon-quo-left"></i>谢谢你请我吃糖果<i class="icon icon-quo-right"></i></p>
+                  <div class="reward-box">
+                    
+                    
+                  </div>
+                </span>
+              </span>
+            </span>
+          </div>
+          </a>
+        </div>
+      
+    </div>
+    <div class="article-info article-info-index">
       
       
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2019" class="archive-year">2019</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/10/30/Jenkins初探/" class="archive-article-date">
-  	<time datetime="2019-10-30T00:56:31.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-10-30</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/10/30/Jenkins初探/">Jenkins 初探</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">Jenkins</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">CI/CD</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Jenkins//" class="article-tag-list-link color3">Jenkins</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/Jenkins/CI-CD//" class="article-tag-list-link color1">CI/CD</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/10/20/IPFS初探/" class="archive-article-date">
-  	<time datetime="2019-10-20T00:48:40.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-10-20</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/10/20/IPFS初探/">IPFS 初探</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
-	<div class="article-tag tagcloud">
-		<i class="icon-price-tags icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">IPFS</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">区块链</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-          
-	<div class="article-category tagcloud">
-		<i class="icon-book icon"></i>
-		<ul class="article-tag-list">
-			 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/IPFS//" class="article-tag-list-link color5">IPFS</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="/categories/IPFS/区块链//" class="article-tag-list-link color4">区块链</a>
-        		</li>
-      		
-		</ul>
-	</div>
-
-
-        </div>
-        <div class="clearfix"></div>
-    </header>
-  </div>
-</article>
-  
-    
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2019/10/11/Docker-Alpine-作为-Golang-基础镜像的坑/" class="archive-article-date">
-  	<time datetime="2019-10-11T14:48:06.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-10-11</time>
-</a>
-        </div>
-    	 
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2019/10/11/Docker-Alpine-作为-Golang-基础镜像的坑/">基础镜像选择问题 | Alpine作为基础镜像的坑</a>
-    </h1>
-  
-
-        <div class="article-info info-on-right">
-          
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
@@ -307,44 +254,140 @@
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">Docker</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">Alpine</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">Slice</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 	<div class="article-category tagcloud">
 		<i class="icon-book icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="/categories/Docker//" class="article-tag-list-link color2">Docker</a>
+        			<a href="/categories/Golang//" class="article-tag-list-link color2">Golang</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="/categories/Docker/踩坑//" class="article-tag-list-link color3">踩坑</a>
+        			<a href="/categories/Golang/踩坑//" class="article-tag-list-link color3">踩坑</a>
         		</li>
       		
 		</ul>
 	</div>
 
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2020/02/12/Golang-append/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
+
+  
+<nav id="article-nav">
   
   
-    </div></section>
+    <a href="/2019/11/15/Spring-Cloud-Gateway路由与Controller的优先级/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">Spring-Cloud-Gateway | 直接请求 @RequesetMapping 的 Controller 时  GlobalFilter 不生效</div>
+      <i class="icon-circle-right"></i>
+    </a>
+  
+</nav>
+
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+        <div class="toc-container tooltip-left">
+            <i class="icon-font icon-category"></i>
+            <div class="tooltip tooltip-east">
+                <span class="tooltip-item">
+                </span>
+                <span class="tooltip-content">
+                    <div class="toc-article">
+                    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Golang-内置函数-append-踩坑"><span class="toc-number">1.</span> <span class="toc-text">Golang 内置函数 append() 踩坑</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-场景重现"><span class="toc-number">1.1.</span> <span class="toc-text">1 场景重现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-解题"><span class="toc-number">1.1.1.</span> <span class="toc-text">1.1 解题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Debug"><span class="toc-number">1.1.2.</span> <span class="toc-text">Debug</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#解决方案"><span class="toc-number">1.1.3.</span> <span class="toc-text">解决方案</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-理解append-函数"><span class="toc-number">1.2.</span> <span class="toc-text">2 理解append()函数</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-测试append-函数"><span class="toc-number">1.2.1.</span> <span class="toc-text">2.1 测试append()函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-回顾问题"><span class="toc-number">1.2.2.</span> <span class="toc-text">2.2 回顾问题</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-疑问"><span class="toc-number">1.3.</span> <span class="toc-text">3 疑问</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-切片地址相同，len却可以不同"><span class="toc-number">1.3.1.</span> <span class="toc-text">3.1 切片地址相同，len却可以不同</span></a></li></ol></li></ol></li></ol>
+                    </div>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+</aside>
+
+
+
+  
+  
   
 
-    
+  
+
+  
+
+  
 
 
           </div>
@@ -367,8 +410,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: true,
